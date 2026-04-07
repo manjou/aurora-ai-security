@@ -1,0 +1,21 @@
+# Sensitive files
+*.tar
+*password*
+*.key
+*.pem
+*credentials*
+
+# OS files
+.DS_Store
+Thumbs.db
+._*
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# Large VM files
+*.iso
+*.vmdk
+*.qcow2
