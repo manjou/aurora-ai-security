@@ -15,17 +15,24 @@
 
 **WE ALREADY HAVE:**
 - ✅ 8 VMs deployed in UTM hypervisor on M3 Mac
-- ✅ pfSense router installed
-- ✅ 2x Alpine Linux switches installed  
-- ✅ Wazuh SIEM fully operational at 192.168.64.7
-- ✅ Windows 11, Kali, Ubuntu endpoints ready
-- ✅ Network: 192.168.64.0/24 (UTM Shared Network/NAT)
+- ✅ pfSense router — LAN: 172.16.1.1/24 (confirmed April 9)
+- ✅ 2x Alpine Linux switches — 172.16.1.11 / 172.16.1.12 (confirmed April 9)
+- ✅ Wazuh SIEM fully operational at 172.16.1.10 (internal) / 192.168.64.7 (Shared NAT fallback)
+- ✅ Windows 11 at 172.16.1.100 — Wazuh agent ACTIVE (Win11-Aurora)
+- ✅ Kali at 192.168.64.10 (Shared Network — intentional isolation, no agent needed)
+- ✅ Network: flat 172.16.1.0/24 (UTM "Emulated VLAN" bridge — Host Only)
 
-**NEXT STEPS:**
-- Configure VLANs on pfSense (if needed)
-- Deploy Wazuh agents to endpoints
-- Document configurations
-- Take screenshots
+**ARCHITECTURE DECISION (April 9):**
+UTM does not support 802.1Q VLAN tagging. Separate bridge approach abandoned in favour of
+flat 172.16.1.0/24 with logical segmentation enforced via pfSense firewall rules (IP-based zones).
+This mirrors cloud-native approaches (AWS Security Groups, Azure NSGs). Documented in design doc.
+
+**REMAINING FOR SEGMENT 2:**
+- Configure pfSense firewall rules (zone policy: MGMT/OPS/ATTACKER IP ranges)
+- Configure pfSense syslog → Wazuh 172.16.1.10 UDP 514 (extension credit)
+- Run connectivity tests + screenshots (ping/traceroute between VMs)
+- Update network diagram
+- Compile PDF: Segment2_VirtualBuild_Janzen.pdf
 
 
 **Summary from latest installation with Gemini:**
@@ -167,13 +174,13 @@ End of Planning Document
 
 | VM Name | OS | Architecture | Purpose | IP | Status |
 |---------|----|--------------|---------|----|--------|
-| Ubuntu 22.04 AMD | Ubuntu 22.04 | AMD64 (emulated) | Wazuh SIEM Server | 192.168.64.7 | ✅ Operational |
-| Project_Aurora_pfSense | pfSense 2.7.2 | AMD64 (emulated) | Router/Firewall | WAN: 192.168.64.11 / LAN: 10.10.10.1 | 🔜 Needs VLAN interfaces added |
-| Switch-1-Alpine | Alpine Linux | ARM64 | Virtual Switch | TBD | 🔜 Needs config |
-| Switch-2-Alpine | Alpine Linux | ARM64 | Virtual Switch | TBD | 🔜 Needs config |
-| Windows11 Arm | Windows 11 | ARM64 | Endpoint | TBD | 🔜 Needs agent |
-| Kali Linux 2024 | Kali Linux | ARM64 | Red Team/Testing | TBD | 🔜 Needs agent |
-| Ubuntu 25.10 ARM | Ubuntu 25.10 | ARM64 | Endpoint | TBD | Optional |
+| Wazuh-Manager | Ubuntu 22.04 | AMD64 (emulated) | SIEM (Manager + Indexer + Dashboard) | 172.16.1.10 | ✅ Operational |
+| pfSense-Aurora | pfSense 2.7.2 | AMD64 (emulated) | Router/Firewall/DHCP | WAN: 192.168.64.11 / LAN: 172.16.1.1 | ✅ Running — firewall rules pending |
+| Switch-1-Alpine | Alpine Linux 3.23.3 | ARM64 | Virtual L2 Switch — Operations zone | 172.16.1.12 | ✅ Configured — no Wazuh agent (ARM64) |
+| Switch-2-Alpine | Alpine Linux 3.23.3 | ARM64 | Virtual L2 Switch — Management zone | 172.16.1.11 | ✅ Configured — no Wazuh agent (ARM64) |
+| Windows 11 ARM | Windows 11 Pro | ARM64 | Target endpoint | 172.16.1.100 | ✅ Wazuh agent ACTIVE |
+| Kali-Linux | Kali Linux | ARM64 | Red Team / Attacker | 192.168.64.10 | ✅ Ready — no agent (attacker node) |
+| Ubuntu 25.10 ARM | Ubuntu 25.10 | ARM64 | Spare endpoint | TBD | Optional |
 | Clone Ubuntu 22.04 AMD | Ubuntu 22.04 | AMD64 (emulated) | Backup/Testing | N/A | Backup only |
 
 ---
@@ -193,24 +200,24 @@ End of Planning Document
 
 ### 🔄 Segment 2: Virtual Infrastructure Build (IN PROGRESS)
 - **Duration:** 2 weeks  
-- **Deadline:** Friday, April 11, 2026 (2 days remaining)  
+- **Deadline:** Friday, April 11, 2026  
 - **Completed:**
-  - ✅ 8 VMs deployed
+  - ✅ 8 VMs deployed in UTM
   - ✅ Wazuh SIEM operational (Manager + Indexer + Dashboard + Filebeat)
-  - ✅ Dashboard accessible at https://192.168.64.7
-  - ✅ All core services running (verified via systemctl)
+  - ✅ All VMs migrated to flat 172.16.1.0/24 internal network (April 9)
+  - ✅ Static IPs assigned and confirmed reachable from pfSense
+  - ✅ Wazuh agent deployed to Windows 11 (Win11-Aurora — Active)
+  - ✅ Alpine agent issue documented (ARM64 — no Wazuh package; syslog mitigation planned)
+  - ✅ Kali agent: intentionally skipped (attacker node — no monitoring needed)
+  - ✅ Simulation design document created with full architecture rationale
   - ✅ Git repository initialized and connected to GitHub
-  - ✅ Project structure created in VS Code
-  
-- **Pending:**
-  - 🔜 Create UTM network bridges + configure pfSense VLAN interfaces (172.16.30/40/99)
-  - 🔜 Assign static IPs to all VMs per 172.16.x.x scheme
-  - 🔜 Deploy Wazuh agents to Windows 11 VM
-  - 🔜 Deploy Wazuh agents to Kali Linux VM
-  - 🔜 Deploy Wazuh agents to both Alpine switch VMs
-  - 🔜 Configure pfSense syslog forwarding to Wazuh
-  - 🔜 Take screenshots (ping tests, agent list, pfSense interfaces, Wazuh dashboard)
-  - 🔜 Create 10-page Segment 2 PDF (Segment2_VirtualBuild_Janzen.pdf)
+
+- **Remaining (tomorrow April 10):**
+  - 🔜 Configure pfSense firewall rules (zone policy: MGMT/OPS/ATTACKER)
+  - 🔜 Configure pfSense syslog → Wazuh 172.16.1.10 UDP 514 (extension credit)
+  - 🔜 Run connectivity tests + take screenshots (ping/traceroute)
+  - 🔜 Update network diagram
+  - 🔜 Compile PDF: Segment2_VirtualBuild_Janzen.pdf
 
 ### 📅 Segment 3: Security & SOC Planning (UPCOMING)
 - **Duration:** 2 weeks (starts April 14)  
@@ -254,6 +261,8 @@ End of Planning Document
 - ARM vs AMD64 matters: Windows/Kali/Ubuntu 25.10 are ARM native; pfSense/Alpine/Wazuh are AMD64 emulated
 - Rosetta 2 emulation has limitations (Java compatibility issues)
 - UTM Shared Network provides reliable NAT with DHCP
+- UTM does NOT support 802.1Q VLAN tagging → using flat 172.16.1.0/24 with pfSense firewall rules for logical zone separation
+- Wazuh Alpine packages are x86_64 only — no ARM64 build → syslog forwarding from pfSense is the mitigation
 
 ---
 
@@ -277,7 +286,7 @@ systemctl status filebeat         # Active
 
 **Credentials:** Stored in `/root/wazuh-install-files.tar`
 
-**Dashboard Access:** https://192.168.64.7
+**Dashboard Access:** https://172.16.1.10 (internal) / https://192.168.64.7 (Shared NAT fallback)
 
 **Configuration Files:**
 - Manager: `/var/ossec/etc/ossec.conf`
@@ -363,21 +372,23 @@ Aurora-AI-Security/
 
 ## Current Priorities (This Week)
 
-**Wednesday, April 9:**
-1. Deploy Wazuh agent to Windows 11 VM
-2. Deploy Wazuh agent to Kali Linux VM
-3. Verify agents in dashboard
-4. Take screenshots
+**Wednesday, April 9 — DONE:**
+- ✅ Migrated all VMs to 172.16.1.0/24 internal network
+- ✅ Windows 11 Wazuh agent confirmed active
+- ✅ Architecture decision documented (flat + pfSense rules)
 
 **Thursday, April 10:**
-1. Document all configurations
-2. Create network diagram (draw.io)
-3. Draft Segment 2 PDF content
+1. Configure pfSense firewall rules (zone policy)
+2. Configure pfSense syslog → Wazuh (UDP 514)
+3. Run connectivity tests + screenshots
+4. Update network diagram
+5. Draft Segment 2 PDF
 
 **Friday, April 11:**
-1. Finalize Segment 2 PDF (10 pages)
+1. Finalize Segment 2 PDF (Segment2_VirtualBuild_Janzen.pdf)
 2. Submit to Masterschool
-3. Prepare for Segment 3
+3. Live session at 11:00
+4. Prepare for Segment 3 (starts April 14)
 
 ---
 

@@ -2,9 +2,9 @@
 ## Virtual SOC on UTM (MacBook Air M3)
 
 **Created:** April 8, 2026
-**Last Updated:** April 8, 2026
+**Last Updated:** April 9, 2026
 **Purpose:** Simulate AURORA AI Security GmbH network segments for security testing and SIEM integration
-**Status:** Phase 1 complete — Phase 2 (VLAN/routing config) in progress
+**Status:** Phase 1 & 2 complete — Phase 3 (SIEM agents) mostly done — pfSense firewall rules + syslog pending
 
 ---
 
@@ -179,18 +179,18 @@ Verified April 8, 2026 via pfSense console screenshot.
 
 | VM | Current IP | Interface | Target IP (Post-VLAN) |
 |----|-----------|-----------|----------------------|
-| pfSense-Aurora (WAN) | 192.168.64.11/24 (DHCP) | em0 | Keep as WAN/mgmt fallback |
-| pfSense-Aurora (LAN) | 10.10.10.1/27 (static) | em1 | Repurpose → VLAN 30: 172.16.30.1 |
-| pfSense-Aurora (OPT1) | not yet created | — | VLAN 40: 172.16.40.1 |
-| pfSense-Aurora (OPT2) | not yet created | — | VLAN 99: 172.16.99.1 |
-| Wazuh-Manager | 192.168.64.7 | em0 | 172.16.30.10 |
-| Switch-2-Alpine | DHCP / TBD | — | 172.16.30.11 |
-| Switch-1-Alpine | DHCP / TBD | — | 172.16.40.11 |
-| Windows 11 ARM | DHCP / TBD | — | 172.16.40.100 |
-| Kali-Linux | DHCP / TBD | — | 172.16.99.50 |
+| pfSense-Aurora (WAN) | 192.168.64.11/24 (DHCP) | em0 — Shared Network | Keep as WAN/internet uplink |
+| pfSense-Aurora (LAN) | 172.16.1.1/24 (static) ✅ | em1 — Emulated VLAN | Internal lab gateway — confirmed April 9 |
+| Wazuh-Manager | 172.16.1.10/24 ✅ | Host Only — static via netplan | Confirmed reachable from pfSense |
+| Switch-2-Alpine | 172.16.1.11/24 ✅ | Host Only — static via setup-interfaces | Confirmed reachable from pfSense |
+| Switch-1-Alpine | 172.16.1.12/24 ✅ | Host Only — static via setup-interfaces | Confirmed reachable from pfSense |
+| Windows 11 ARM | 172.16.1.100/24 ✅ | Host Only — static via Windows Settings | Confirmed reachable from pfSense |
+| Kali-Linux | 192.168.64.10/24 ✅ | Shared Network (NAT) — attacker zone | Naturally isolated from internal 172.16.1.x network |
 
-**Note:** pfSense LAN is currently set to `10.10.10.1/27` (Segment 1 production VLAN 10 subnet).
-This was the initial default config. It will be reconfigured to `172.16.30.1/24` for the simulation.
+**UTM Network Architecture (confirmed):**
+UTM Emulated VLAN = single flat internal network. No 802.1Q VLAN IDs available.
+Logical segmentation (VLAN 30/40/99) enforced via pfSense firewall rules and IP ranges.
+pfSense DHCP server active on LAN: 172.16.1.100–172.16.1.200
 
 > **Note:** During VLAN migration, Wazuh Dashboard will temporarily be inaccessible at
 > `192.168.64.7`. New address will be `172.16.30.10` once VLAN 30 is configured.
@@ -242,34 +242,42 @@ UTM does not natively support 802.1Q VLAN tagging. The approach is:
 - ✅ All Wazuh services verified via `systemctl`
 - ✅ Git repo initialized and connected to GitHub
 
-### Phase 2: VLAN & Routing Configuration 🔄 IN PROGRESS
-> Target completion: April 9, 2026
+### Phase 2: Network & Routing Configuration ✅ MOSTLY COMPLETE
+> Completed: April 9, 2026
 
-Steps (update checkboxes as completed):
-- [ ] Create 3 separate network bridges in UTM (`vlan30_net`, `vlan40_net`, `vlan99_net`)
-- [ ] Add NICs to pfSense-Aurora for each bridge
-- [ ] Configure pfSense LAN interfaces: assign IPs 172.16.30.1, 172.16.40.1, 172.16.99.1
-- [ ] Assign static IPs on Wazuh-Manager (172.16.30.10)
-- [ ] Assign static IPs on Switch-2-Alpine (172.16.30.11)
-- [ ] Assign static IPs on Switch-1-Alpine (172.16.40.11)
-- [ ] Assign static IP on Windows 11 (172.16.40.100) or configure DHCP scope
-- [ ] Assign static IP on Kali (172.16.99.50)
-- [ ] Configure pfSense inter-VLAN firewall rules (see Section 5)
-- [ ] Verify ping: Switch-2 → Wazuh (172.16.30.10)
-- [ ] Verify ping: Windows 11 → pfSense gateway (172.16.40.1)
-- [ ] Verify isolation: Kali cannot reach VLAN 40 or VLAN 30
-- [ ] Take screenshots of all ping tests and pfSense interface config
+**Architecture decision:** UTM does not support 802.1Q VLAN tagging. Separate bridge approach
+abandoned. All VMs on flat 172.16.1.0/24 (UTM "Emulated VLAN" bridge). Logical zone separation
+enforced via pfSense firewall rules based on IP ranges. This mirrors cloud-native security group
+approaches and is standard practice for hypervisor-based labs without switch hardware.
+
+- [x] All VMs migrated from 192.168.64.0/24 (Shared NAT) to 172.16.1.0/24 (Host Only / Emulated VLAN)
+- [x] pfSense LAN configured: 172.16.1.1/24 (static)
+- [x] Wazuh-Manager: 172.16.1.10/24 (static via netplan)
+- [x] Switch-2-Alpine: 172.16.1.11/24 (static via setup-interfaces)
+- [x] Switch-1-Alpine: 172.16.1.12/24 (static via setup-interfaces)
+- [x] Windows 11: 172.16.1.100/24 (static via Windows Settings)
+- [x] Kali: 192.168.64.10 (remains on Shared Network — natural attacker isolation)
+- [x] pfSense DHCP server active on LAN: 172.16.1.100–172.16.1.200
+- [ ] Configure pfSense inter-VLAN firewall rules (zone policy — see Section 5)
+- [ ] Verify ping: Windows 11 → pfSense gateway (172.16.1.1)
+- [ ] Verify ping: Switch-1 → Wazuh (172.16.1.10)
+- [ ] Verify isolation: Kali cannot reach 172.16.1.x
+- [ ] Take screenshots of ping tests and pfSense interface config
 
 ### Phase 3: SIEM Agent Deployment 📅 PENDING
 > Target completion: April 10, 2026
 
-- [ ] Install Wazuh agent on Windows 11 ARM (MSI installer)
-- [ ] Install Wazuh agent on Kali Linux
-- [ ] Install Wazuh agent on Switch-1-Alpine (apk-based)
-- [ ] Install Wazuh agent on Switch-2-Alpine (apk-based)
+- [x] Install Wazuh agent on Windows 11 ARM (MSI installer) — Win11-Aurora active ✅
+- [x] Kali Linux — agent intentionally skipped (attacker node; monitoring would compromise realism)
+- [x] Alpine switches — agent installation not possible ⚠️
+  - Switch-1-Alpine and Switch-2-Alpine run Alpine Linux ARM64 (aarch64)
+  - Wazuh Alpine packages are x86_64 only — no ARM64 build available
+  - Mitigation: network infrastructure monitoring via pfSense syslog forwarding to Wazuh
+  - This is standard practice — not all devices support agents; syslog is the industry alternative
 - [ ] Configure pfSense syslog forwarding to Wazuh (UDP 514)
-- [ ] Verify all agents show "Active" in Wazuh Dashboard
-- [ ] Take screenshots of agent list and dashboard
+- [x] Verify Win11-Aurora shows "Active" in Wazuh Dashboard ✅
+- [x] Screenshot: 02_wazuh-agent-powershell-install.png
+- [x] Screenshot: 03_wazuh-agent-win11-active.png
 
 ### Phase 4: Attack Simulation & Detection 📅 SEGMENT 4 SCOPE
 > This phase is documented here for completeness but will be executed in Segment 4.
