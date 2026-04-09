@@ -1,0 +1,362 @@
+# AURORA Network Simulation Design
+## Virtual SOC on UTM (MacBook Air M3)
+
+**Created:** April 8, 2026
+**Last Updated:** April 8, 2026
+**Purpose:** Simulate AURORA AI Security GmbH network segments for security testing and SIEM integration
+**Status:** Phase 1 complete — Phase 2 (VLAN/routing config) in progress
+
+---
+
+## 1. Simulation Scope & Objectives
+
+### What We're Simulating
+We're creating a **miniature version** of the AURORA network that demonstrates:
+- ✅ **Segmentation** - Multiple VLANs with different security zones
+- ✅ **Traffic Flow** - Inter-VLAN routing with firewall rules
+- ✅ **SIEM Integration** - Centralized logging and monitoring
+- ✅ **Attack Simulation** - Kali Linux performing reconnaissance and exploitation
+- ✅ **Endpoint Monitoring** - Windows 11 as a target with Wazuh agent
+
+### What We're NOT Simulating
+- ❌ External internet connectivity (BSI perimeter)
+- ❌ Basel branch WAN link
+- ❌ High-performance lab (resource constraints)
+- ❌ Physical switches (using Alpine Linux virtual switches)
+
+---
+
+## 2. Simulation-to-Production Mapping
+
+### Design Rationale
+This simulation is a deliberately **miniaturized subset** of the full AURORA production network
+(Segment 1 design). Two key deviations are intentional and documented here for the grader:
+
+1. **IP Addressing:** The production design uses `10.10.x.x` (Freiburg HQ). The simulation uses
+   `172.16.x.x` to avoid address conflicts with UTM's NAT range (`192.168.64.0/24`) and to
+   clearly separate lab traffic from hypervisor management traffic.
+
+2. **SIEM Platform:** The production design specifies Splunk / Microsoft Sentinel (enterprise
+   licenses). The simulation uses **Wazuh 4.14.3** as the open-source equivalent, providing
+   identical functionality (log collection, indexing, alerting, dashboards) within lab resource
+   constraints.
+
+### VLAN Mapping: Simulation → Production
+
+| Simulation VLAN | Simulation Name | Production VLAN (Segment 1) | Production Name | Notes |
+|---|---|---|---|---|
+| **30** | MGMT | **30** | IT & Infrastructure | SIEM and management systems live here in both designs |
+| **40** | OPERATIONS | **40** | Consulting | Represents the primary user/ops segment |
+| **99** | ATTACKER | **51** | Dirty Lab Sandbox | Isolated adversarial zone; VLAN 99 chosen to avoid collision with production IDs |
+
+### VM Inventory → AURORA Network Role
+
+| VM Name | OS | Role in Simulation | Maps to in Production |
+|---------|----|--------------------|----------------------|
+| **pfSense-Aurora** | pfSense (FreeBSD) | Inter-VLAN Router + Firewall | FortiGate NGFW + Cisco Catalyst 9300L L3 Core |
+| **Wazuh-Manager** | Ubuntu 22.04 AMD64 | SIEM (log collection, alerting, dashboard) | Splunk / Sentinel server (VLAN 30) |
+| **Switch-1-Alpine** | Alpine 3.23.3 ARM64 | Virtual L2 Switch — Operations segment | Cisco Catalyst 9200L access switch |
+| **Switch-2-Alpine** | Alpine 3.23.3 ARM64 | Virtual L2 Switch — Management segment | Cisco Catalyst 9200L access switch |
+| **Windows 11 ARM** | Windows 11 Pro ARM64 | Target endpoint with Wazuh agent | Consulting workstation (VLAN 40) |
+| **Kali-Linux** | Kali Linux ARM64 | Attacker / penetration tester | Dirty Lab adversarial node (VLAN 51) |
+
+---
+
+## 3. VLAN Design & IP Addressing
+
+### IP Scheme Note
+Production uses `10.10.x.x`. Simulation uses `172.16.x.x`. The third octet mirrors the VLAN ID
+in both schemes (e.g., VLAN 30 → `x.x.30.x`) to keep the mapping intuitive.
+
+### VLAN Scheme
+
+| VLAN ID | Name | IP Subnet | Gateway | Purpose | Production Equivalent |
+|---------|------|-----------|---------|---------|----------------------|
+| **30** | MGMT | 172.16.30.0/24 | 172.16.30.1 | Management Zone: Wazuh SIEM + Switch-2 | VLAN 30 (10.10.30.0/24) |
+| **40** | OPERATIONS | 172.16.40.0/24 | 172.16.40.1 | User Segment: Windows 11 + Switch-1 | VLAN 40 (10.10.40.0/24) |
+| **99** | ATTACKER | 172.16.99.0/24 | 172.16.99.1 | Isolated adversarial zone: Kali Linux | VLAN 51 (10.10.51.0/24) |
+
+### IP Address Assignments
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  VLAN 30 - MANAGEMENT ZONE (172.16.30.0/24)                │
+├─────────────────────────────────────────────────────────────┤
+│  172.16.30.1        pfSense (VLAN 30 interface)            │
+│  172.16.30.10       Wazuh-Manager (SIEM)                   │
+│  172.16.30.11       Switch-2-Alpine (with Wazuh agent)     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  VLAN 40 - OPERATIONS (172.16.40.0/24)                     │
+├─────────────────────────────────────────────────────────────┤
+│  172.16.40.1        pfSense (VLAN 40 interface)            │
+│  172.16.40.100      Windows 11 ARM (with Wazuh agent)      │
+│  172.16.40.11       Switch-1-Alpine (with Wazuh agent)     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  VLAN 99 - ATTACKER ZONE (172.16.99.0/24)                  │
+├─────────────────────────────────────────────────────────────┤
+│  172.16.99.1        pfSense (VLAN 99 interface)            │
+│  172.16.99.50       Kali-Linux (isolated by default)       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Network Topology Diagram
+
+```
+                    ┌─────────────────────┐
+                    │   pfSense-Aurora    │
+                    │   (Inter-VLAN       │
+                    │    Router/FW)       │
+                    └──────────┬──────────┘
+                               │
+                 ┌─────────────┼─────────────┐
+                 │             │             │
+        ┌────────▼─────┐  ┌───▼────────┐  ┌▼────────────┐
+        │  VLAN 30     │  │  VLAN 40   │  │  VLAN 99    │
+        │  MGMT        │  │  OPERATIONS│  │  ATTACKER   │
+        │ .30.0/24     │  │  .40.0/24  │  │  .99.0/24   │
+        └──────┬───────┘  └─────┬──────┘  └──────┬──────┘
+               │                │                 │
+      ┌────────┴─────┐   ┌─────┴──────┐   ┌─────┴──────┐
+      │ Wazuh-Mgr    │   │ Windows 11 │   │ Kali Linux │
+      │ .30.10       │   │ .40.100    │   │ .99.50     │
+      │ (SIEM)       │   │ (Target)   │   │ (Attacker) │
+      └──────────────┘   └────────────┘   └────────────┘
+      │ Switch-2     │   │ Switch-1   │
+      │ .30.11       │   │ .40.11     │
+      └──────────────┘   └────────────┘
+```
+
+---
+
+## 5. Security Rules & Traffic Flow
+
+### Firewall Rules on pfSense (Inter-VLAN)
+
+#### VLAN 40 (Operations) → VLAN 30 (MGMT)
+```
+✅ ALLOW: Windows 11 → Wazuh-Manager (TCP 1514, 1515)
+✅ ALLOW: Switch-1 → Wazuh-Manager (TCP 1514, 1515)
+❌ DENY:  All other traffic to MGMT zone
+```
+
+#### VLAN 30 (MGMT) → VLAN 40 (Operations)
+```
+✅ ALLOW: Wazuh-Manager → All (for agent management)
+✅ ALLOW: Switch-2 → All (for network management)
+```
+
+#### VLAN 99 (Attacker) → All VLANs
+```
+❌ DENY:  All traffic by default (isolated)
+✅ ALLOW: Manual rules added during penetration testing phases
+```
+
+### Expected Traffic Flows
+
+1. **Normal Operations:**
+   - Windows 11 → Wazuh (agent heartbeat every 10s)
+   - Switch-1 → Wazuh (system logs)
+   - Switch-2 → Wazuh (system logs)
+   - pfSense → Wazuh (firewall logs via syslog)
+
+2. **Attack Simulation (Segment 4):**
+   - Kali → VLAN 40 (port scan, exploit attempts)
+   - Wazuh detects suspicious activity
+   - Alerts generated in dashboard
+
+---
+
+## 6. UTM Network Configuration
+
+### Current State (Pre-VLAN Configuration)
+Verified April 8, 2026 via pfSense console screenshot.
+
+| VM | Current IP | Interface | Target IP (Post-VLAN) |
+|----|-----------|-----------|----------------------|
+| pfSense-Aurora (WAN) | 192.168.64.11/24 (DHCP) | em0 | Keep as WAN/mgmt fallback |
+| pfSense-Aurora (LAN) | 10.10.10.1/27 (static) | em1 | Repurpose → VLAN 30: 172.16.30.1 |
+| pfSense-Aurora (OPT1) | not yet created | — | VLAN 40: 172.16.40.1 |
+| pfSense-Aurora (OPT2) | not yet created | — | VLAN 99: 172.16.99.1 |
+| Wazuh-Manager | 192.168.64.7 | em0 | 172.16.30.10 |
+| Switch-2-Alpine | DHCP / TBD | — | 172.16.30.11 |
+| Switch-1-Alpine | DHCP / TBD | — | 172.16.40.11 |
+| Windows 11 ARM | DHCP / TBD | — | 172.16.40.100 |
+| Kali-Linux | DHCP / TBD | — | 172.16.99.50 |
+
+**Note:** pfSense LAN is currently set to `10.10.10.1/27` (Segment 1 production VLAN 10 subnet).
+This was the initial default config. It will be reconfigured to `172.16.30.1/24` for the simulation.
+
+> **Note:** During VLAN migration, Wazuh Dashboard will temporarily be inaccessible at
+> `192.168.64.7`. New address will be `172.16.30.10` once VLAN 30 is configured.
+> Keep a screenshot of the working dashboard at the old IP as evidence before migration.
+
+### Target UTM Network Interfaces (Post-Configuration)
+
+UTM does not natively support 802.1Q VLAN tagging. The approach is:
+- Create **separate virtual network bridges** in UTM for each VLAN (one per segment)
+- Assign each VM's NIC to the appropriate bridge
+- pfSense handles inter-VLAN routing (router-on-a-stick is NOT needed — separate bridges)
+
+#### pfSense-Aurora
+- **NIC 1:** Shared Network (management / fallback internet access)
+- **NIC 2:** `vlan30_net` bridge → VLAN 30 Management (172.16.30.1)
+- **NIC 3:** `vlan40_net` bridge → VLAN 40 Operations (172.16.40.1)
+- **NIC 4:** `vlan99_net` bridge → VLAN 99 Attacker (172.16.99.1)
+
+#### Wazuh-Manager
+- **NIC 1:** `vlan30_net` bridge → static 172.16.30.10
+
+#### Switch-2-Alpine
+- **NIC 1:** `vlan30_net` bridge → static 172.16.30.11
+
+#### Switch-1-Alpine
+- **NIC 1:** `vlan40_net` bridge → static 172.16.40.11
+
+#### Windows 11 ARM
+- **NIC 1:** `vlan40_net` bridge → static or DHCP 172.16.40.100
+
+#### Kali-Linux
+- **NIC 1:** `vlan99_net` bridge → static 172.16.99.50
+
+### M3/UTM-Specific Notes
+- UTM on Apple Silicon uses the **Hypervisor framework** (not QEMU KVM) for ARM64 VMs
+- AMD64 VMs (pfSense, Wazuh, Alpine) run under full QEMU emulation — slower, higher CPU cost
+- Use **Serial Console** `[>_]` for Alpine VMs — no virtio-gpu display driver available
+- Network bridge creation in UTM: Settings → Network → Add custom bridge network
+
+---
+
+## 7. Implementation Phases
+
+### Phase 1: Network Foundation ✅ COMPLETE
+- ✅ All VMs installed and bootable in UTM
+- ✅ SSH access configured (key-based auth via GitHub)
+- ✅ Wazuh Manager fully operational (Manager + Indexer + Dashboard + Filebeat)
+- ✅ Wazuh Dashboard accessible at https://192.168.64.7
+- ✅ All Wazuh services verified via `systemctl`
+- ✅ Git repo initialized and connected to GitHub
+
+### Phase 2: VLAN & Routing Configuration 🔄 IN PROGRESS
+> Target completion: April 9, 2026
+
+Steps (update checkboxes as completed):
+- [ ] Create 3 separate network bridges in UTM (`vlan30_net`, `vlan40_net`, `vlan99_net`)
+- [ ] Add NICs to pfSense-Aurora for each bridge
+- [ ] Configure pfSense LAN interfaces: assign IPs 172.16.30.1, 172.16.40.1, 172.16.99.1
+- [ ] Assign static IPs on Wazuh-Manager (172.16.30.10)
+- [ ] Assign static IPs on Switch-2-Alpine (172.16.30.11)
+- [ ] Assign static IPs on Switch-1-Alpine (172.16.40.11)
+- [ ] Assign static IP on Windows 11 (172.16.40.100) or configure DHCP scope
+- [ ] Assign static IP on Kali (172.16.99.50)
+- [ ] Configure pfSense inter-VLAN firewall rules (see Section 5)
+- [ ] Verify ping: Switch-2 → Wazuh (172.16.30.10)
+- [ ] Verify ping: Windows 11 → pfSense gateway (172.16.40.1)
+- [ ] Verify isolation: Kali cannot reach VLAN 40 or VLAN 30
+- [ ] Take screenshots of all ping tests and pfSense interface config
+
+### Phase 3: SIEM Agent Deployment 📅 PENDING
+> Target completion: April 10, 2026
+
+- [ ] Install Wazuh agent on Windows 11 ARM (MSI installer)
+- [ ] Install Wazuh agent on Kali Linux
+- [ ] Install Wazuh agent on Switch-1-Alpine (apk-based)
+- [ ] Install Wazuh agent on Switch-2-Alpine (apk-based)
+- [ ] Configure pfSense syslog forwarding to Wazuh (UDP 514)
+- [ ] Verify all agents show "Active" in Wazuh Dashboard
+- [ ] Take screenshots of agent list and dashboard
+
+### Phase 4: Attack Simulation & Detection 📅 SEGMENT 4 SCOPE
+> This phase is documented here for completeness but will be executed in Segment 4.
+
+- [ ] Enable controlled Kali → VLAN 40 access via temporary pfSense rule
+- [ ] Run Nmap scan from Kali → Windows 11 (172.16.40.100)
+- [ ] Attempt exploitation via Metasploit
+- [ ] Verify Wazuh detects and generates alerts
+- [ ] Screenshot alert dashboard
+
+---
+
+## 8. Validation Checkpoints
+
+### Connectivity Tests
+- [ ] Switch-2 can ping Wazuh-Manager (172.16.30.10)
+- [ ] Switch-1 can ping pfSense gateway (172.16.40.1)
+- [ ] Windows 11 can ping pfSense gateway (172.16.40.1)
+- [ ] Windows 11 can reach Wazuh-Manager (172.16.30.10)
+- [ ] Kali CANNOT ping any VLAN (isolated)
+
+### SIEM Monitoring
+- [ ] All Wazuh agents show "Active" in dashboard
+- [ ] pfSense firewall logs appear in Wazuh
+- [ ] Test alert triggers (failed SSH login)
+
+### Security Boundaries
+- [ ] VLAN 40 → VLAN 30 traffic is logged
+- [ ] VLAN 99 → VLAN 40 traffic is blocked by default
+- [ ] No traffic leaks between VLANs
+
+---
+
+## 9. Resource Footprint (M3 MacBook)
+
+| VM | RAM Allocation | Disk Usage | CPU |
+|----|---------------|------------|-----|
+| pfSense-Aurora | 1.5 GB | ~8 GB | 2 cores |
+| Wazuh-Manager | 4 GB | ~20 GB | 2 cores |
+| Switch-1-Alpine | 256 MB | 2 GB | 1 core |
+| Switch-2-Alpine | 256 MB | 2 GB | 1 core |
+| Windows 11 ARM | 4 GB | 60 GB | 2 cores |
+| Kali-Linux | 2 GB | 30 GB | 2 cores |
+| **TOTAL** | **~12 GB** | **~124 GB** | **10 cores** |
+
+**Viable on 16GB M3 MacBook** ✅ (with host OS using 4GB)
+
+---
+
+## 10. Documentation for Portfolio
+
+This simulation demonstrates:
+- **Segment 1:** Network planning and IP schema design
+- **Segment 2:** Virtual infrastructure deployment and SIEM integration
+- **Segment 3:** Security monitoring and log aggregation
+- **Segment 4:** Threat detection and incident response
+
+**Next Steps:** Generate network diagrams, configuration backups, and Wazuh alert screenshots for final portfolio submission.
+
+---
+
+## Appendix: Quick Reference Commands
+
+### Check VM IP Configuration
+```bash
+# Alpine Linux
+ip addr show
+
+# Ubuntu (Wazuh)
+ip a
+
+# Windows 11
+ipconfig
+```
+
+### Test Connectivity
+```bash
+# From any Linux VM
+ping -c 4 172.16.30.10  # Wazuh-Manager
+ping -c 4 172.16.40.1   # pfSense gateway
+```
+
+### Check Wazuh Agent Status
+```bash
+# On agent machine
+systemctl status wazuh-agent
+
+# On Wazuh-Manager
+/var/ossec/bin/agent_control -l
+```
