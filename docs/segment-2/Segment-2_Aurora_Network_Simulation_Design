@@ -274,16 +274,19 @@ pfSense gets one NIC per VLAN — real inter-VLAN routing enforced at L3.
 - [x] pfSense LAN (em1): 172.16.30.1/24 + DHCP 172.16.30.100-200
 - [x] pfSense OPT1 (em2): 172.16.40.1/24 + DHCP 172.16.40.100-200
 - [x] Wazuh IP updated: 172.16.30.10/24 (netplan applied)
-- [ ] ⚠️ Fix pfSense web UI access — re-add default pass rules (LAN allow all deleted)
-- [ ] Enable OPT1 interface in pfSense web UI (Interfaces → OPT1 → Enable)
+- [x] Fix pfSense pass rules via web UI — re-added allow-all for LAN + VLAN40CONSULTING
+- [x] OPT1 enabled and renamed to VLAN40CONSULTING in pfSense
+- [x] Windows 11 IP: 172.16.40.100/24, gateway 172.16.40.1 ✅
+- [x] Inter-VLAN routing confirmed: Win11 → Wazuh (TTL=63, 0% loss) ✅
+- [x] Inter-VLAN routing confirmed: Wazuh → Win11 (0% loss) ✅
+- [x] Screenshots 04–08 taken
 - [ ] Switch-2-Alpine: reconfigure IP to 172.16.30.11
 - [ ] Switch-1-Alpine: reconfigure IP to 172.16.40.11
-- [ ] Windows 11: reconfigure IP to 172.16.40.100
-- [ ] Configure pfSense inter-VLAN firewall rules (zone policy — see Section 5)
-- [ ] Verify ping: Wazuh → pfSense (172.16.30.1)
-- [ ] Verify ping: Win11 → pfSense (172.16.40.1)
+- [ ] Replace allow-all rules with proper zone-policy firewall rules
+- [ ] Configure pfSense syslog → Wazuh 172.16.30.10 UDP 514
+- [ ] Verify Wazuh agent on Win11 still active
 - [ ] Verify isolation: Kali cannot reach VLAN30 or VLAN40
-- [ ] Take screenshots of ping tests and pfSense interface config
+- [ ] Take screenshots of pfSense interface overview
 
 ### Phase 3: SIEM Agent Deployment 📅 PENDING
 > Target completion: April 10, 2026

@@ -30,22 +30,22 @@ Upgraded from flat 172.16.1.x to proper separate VLAN interfaces via UTM bridges
 - Traffic between VLANs must route through pfSense — real inter-VLAN enforcement.
 - Kali on WAN (external attacker) — NOT VLAN51 (Dirty Lab is internal, not simulated here).
 
-**⚠️ BLOCKING ISSUE (resume here):**
-Default LAN "allow all" rules were deleted during earlier firewall session.
-Fix: open http://172.16.30.1 from Wazuh → re-add pass rules for VLAN30 + VLAN40.
-Anti-lockout rule (TCP 80 to pfSense) is still active so web UI is reachable.
+**COMPLETED April 10:**
+- ✅ pfSense OPT1 enabled, renamed to VLAN40CONSULTING
+- ✅ Pass rules added for LAN (VLAN30) and VLAN40CONSULTING
+- ✅ Win11 IP set to 172.16.40.100/24 gateway 172.16.40.1
+- ✅ Inter-VLAN routing confirmed: Win11 (VLAN40) ↔ Wazuh (VLAN30) — 0% packet loss
+- ✅ pfSense web UI accessible from both VLANs
+- ✅ Screenshots 04–08 taken
 
 **REMAINING FOR SEGMENT 2:**
-1. Fix pfSense pass rules via web UI (http://172.16.30.1 from Wazuh)
-2. Enable OPT1 interface in pfSense (Interfaces → OPT1 → Enable)
-3. Reconfigure Switch-2 IP to 172.16.30.11 (Alpine setup-interfaces)
-4. Reconfigure Switch-1 IP to 172.16.40.11 (Alpine setup-interfaces)
-5. Reconfigure Win11 IP to 172.16.40.100 (Windows Settings)
-6. Configure pfSense inter-VLAN firewall rules (zone policy)
-7. Configure pfSense syslog → Wazuh UDP 514 (extension credit)
-8. Run connectivity tests + screenshots
-9. Update network diagram
-10. Compile PDF: Segment2_VirtualBuild_Janzen.pdf
+1. Reconfigure Switch-2 IP to 172.16.30.11 (Alpine setup-interfaces)
+2. Reconfigure Switch-1 IP to 172.16.40.11 (Alpine setup-interfaces)
+3. Replace allow-all rules with proper zone-policy firewall rules
+4. Configure pfSense syslog → Wazuh 172.16.30.10 UDP 514 (extension credit)
+5. Verify Wazuh agent on Win11 still active
+6. Update network diagram
+7. Compile PDF: Segment2_VirtualBuild_Janzen.pdf
 
 
 **Summary from latest installation with Gemini:**
