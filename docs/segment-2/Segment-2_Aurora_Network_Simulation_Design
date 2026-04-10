@@ -2,9 +2,9 @@
 ## Virtual SOC on UTM (MacBook Air M3)
 
 **Created:** April 8, 2026
-**Last Updated:** April 9, 2026
+**Last Updated:** April 10, 2026
 **Purpose:** Simulate AURORA AI Security GmbH network segments for security testing and SIEM integration
-**Status:** Phase 1 & 2 complete — Phase 3 (SIEM agents) mostly done — pfSense firewall rules + syslog pending
+**Status:** Phase 2 in progress — proper VLAN interfaces configured on pfSense — Wazuh IP migrated — remaining VMs pending reconfiguration
 
 ---
 
@@ -45,20 +45,21 @@ This simulation is a deliberately **miniaturized subset** of the full AURORA pro
 
 | Simulation VLAN | Simulation Name | Production VLAN (Segment 1) | Production Name | Notes |
 |---|---|---|---|---|
-| **30** | MGMT | **30** | IT & Infrastructure | SIEM and management systems live here in both designs |
-| **40** | OPERATIONS | **40** | Consulting | Represents the primary user/ops segment |
-| **99** | ATTACKER | **51** | Dirty Lab Sandbox | Isolated adversarial zone; VLAN 99 chosen to avoid collision with production IDs |
+| **30** | IT & Infrastructure | **30** | IT & Infrastructure | SIEM and IT systems live here in both designs |
+| **40** | Consulting | **40** | Consulting | Client workstations (Win11 represents a consulting endpoint) |
+| n/a | External attacker | **n/a** | n/a | Kali sits on WAN (192.168.64.x) — simulates external internet attacker, NOT internal VLAN 51. VLAN 51 (Dirty Lab Sandbox) is an internal isolated zone not simulated in this minimal lab. |
 
 ### VM Inventory → AURORA Network Role
 
-| VM Name | OS | Role in Simulation | Maps to in Production |
-|---------|----|--------------------|----------------------|
-| **pfSense-Aurora** | pfSense (FreeBSD) | Inter-VLAN Router + Firewall | FortiGate NGFW + Cisco Catalyst 9300L L3 Core |
-| **Wazuh-Manager** | Ubuntu 22.04 AMD64 | SIEM (log collection, alerting, dashboard) | Splunk / Sentinel server (VLAN 30) |
-| **Switch-1-Alpine** | Alpine 3.23.3 ARM64 | Virtual L2 Switch — Operations segment | Cisco Catalyst 9200L access switch |
-| **Switch-2-Alpine** | Alpine 3.23.3 ARM64 | Virtual L2 Switch — Management segment | Cisco Catalyst 9200L access switch |
-| **Windows 11 ARM** | Windows 11 Pro ARM64 | Target endpoint with Wazuh agent | Consulting workstation (VLAN 40) |
-| **Kali-Linux** | Kali Linux ARM64 | Attacker / penetration tester | Dirty Lab adversarial node (VLAN 51) |
+| UTM VM Name | OS | VLAN | Role in Simulation | Maps to in Production |
+|-------------|----|----|--------------------|-----------------------|
+| **pfSense_Aurora** | pfSense 2.7.2 AMD64 | WAN+VLAN30+VLAN40 | Inter-VLAN Router + Firewall (3 NICs) | FortiGate NGFW + Cisco Catalyst 9300L L3 Core |
+| **VLAN30-Wazuh-Server-Ubuntu 22.04 AMD** | Ubuntu 22.04 AMD64 | VLAN 30 | SIEM (log collection, alerting, dashboard) | Splunk / Sentinel server (VLAN 30) |
+| **VLAN30-Switch-2-Alpine** | Alpine 3.23.3 ARM64 | VLAN 30 | Virtual L2 Switch — IT & Infrastructure zone | Cisco Catalyst 9200L access switch |
+| **VLAN40-Win11-Target** | Windows 11 Pro ARM64 | VLAN 40 | Target endpoint with Wazuh agent | Consulting workstation (VLAN 40) |
+| **VLAN40-Switch-1-Alpine** | Alpine 3.23.3 ARM64 | VLAN 40 | Virtual L2 Switch — Consulting zone | Cisco Catalyst 9200L access switch |
+| **WAN-Kali Linux 2024-Attacker** | Kali Linux ARM64 | WAN (external) | External attacker — simulates internet threat actor | External adversary (not VLAN 51) |
+| **VLAN30-AdminWS-Ubuntu 25.10 ARM** | Ubuntu 25.10 ARM64 | N/A — Optional | Spare endpoint (Apple Virt. Framework — no Host Only) | Admin workstation |
 
 ---
 
@@ -72,34 +73,38 @@ in both schemes (e.g., VLAN 30 → `x.x.30.x`) to keep the mapping intuitive.
 
 | VLAN ID | Name | IP Subnet | Gateway | Purpose | Production Equivalent |
 |---------|------|-----------|---------|---------|----------------------|
-| **30** | MGMT | 172.16.30.0/24 | 172.16.30.1 | Management Zone: Wazuh SIEM + Switch-2 | VLAN 30 (10.10.30.0/24) |
-| **40** | OPERATIONS | 172.16.40.0/24 | 172.16.40.1 | User Segment: Windows 11 + Switch-1 | VLAN 40 (10.10.40.0/24) |
-| **99** | ATTACKER | 172.16.99.0/24 | 172.16.99.1 | Isolated adversarial zone: Kali Linux | VLAN 51 (10.10.51.0/24) |
+| **30** | IT & Infrastructure | 172.16.30.0/24 | 172.16.30.1 | IT zone: Wazuh SIEM + Switch-2 | VLAN 30 — IT & Infrastructure (10.10.30.0/24) |
+| **40** | Consulting | 172.16.40.0/24 | 172.16.40.1 | Client zone: Windows 11 + Switch-1 | VLAN 40 — Consulting (10.10.40.0/24) |
 
 ### IP Address Assignments
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  VLAN 30 - MANAGEMENT ZONE (172.16.30.0/24)                │
+│  VLAN 30 - IT & INFRASTRUCTURE (172.16.30.0/24)            │
+│  pfSense interface: em1 (UTM "Default private" bridge)     │
 ├─────────────────────────────────────────────────────────────┤
-│  172.16.30.1        pfSense (VLAN 30 interface)            │
-│  172.16.30.10       Wazuh-Manager (SIEM)                   │
-│  172.16.30.11       Switch-2-Alpine (with Wazuh agent)     │
+│  172.16.30.1        pfSense (LAN/em1 — VLAN30 gateway)     │
+│  172.16.30.10       Wazuh-Server (SIEM) ✅ configured      │
+│  172.16.30.11       Switch-2-Alpine 🔜 pending             │
+│  172.16.30.100-200  DHCP pool (pfSense)                    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│  VLAN 40 - OPERATIONS (172.16.40.0/24)                     │
+│  VLAN 40 - CONSULTING (172.16.40.0/24)                     │
+│  pfSense interface: em2 (UTM "Network 0" bridge)           │
 ├─────────────────────────────────────────────────────────────┤
-│  172.16.40.1        pfSense (VLAN 40 interface)            │
-│  172.16.40.100      Windows 11 ARM (with Wazuh agent)      │
-│  172.16.40.11       Switch-1-Alpine (with Wazuh agent)     │
+│  172.16.40.1        pfSense (OPT1/em2 — VLAN40 gateway)    │
+│  172.16.40.100      Windows 11 ARM (Wazuh agent) 🔜 pending│
+│  172.16.40.11       Switch-1-Alpine 🔜 pending             │
+│  172.16.40.100-200  DHCP pool (pfSense)                    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│  VLAN 99 - ATTACKER ZONE (172.16.99.0/24)                  │
+│  WAN - EXTERNAL (192.168.64.0/24 — UTM Shared NAT)        │
+│  pfSense interface: em0                                    │
 ├─────────────────────────────────────────────────────────────┤
-│  172.16.99.1        pfSense (VLAN 99 interface)            │
-│  172.16.99.50       Kali-Linux (isolated by default)       │
+│  192.168.64.11      pfSense WAN interface                  │
+│  192.168.64.x       Kali (external attacker — DHCP)        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -108,28 +113,29 @@ in both schemes (e.g., VLAN 30 → `x.x.30.x`) to keep the mapping intuitive.
 ## 4. Network Topology Diagram
 
 ```
-                    ┌─────────────────────┐
-                    │   pfSense-Aurora    │
-                    │   (Inter-VLAN       │
-                    │    Router/FW)       │
-                    └──────────┬──────────┘
-                               │
-                 ┌─────────────┼─────────────┐
-                 │             │             │
-        ┌────────▼─────┐  ┌───▼────────┐  ┌▼────────────┐
-        │  VLAN 30     │  │  VLAN 40   │  │  VLAN 99    │
-        │  MGMT        │  │  OPERATIONS│  │  ATTACKER   │
-        │ .30.0/24     │  │  .40.0/24  │  │  .99.0/24   │
-        └──────┬───────┘  └─────┬──────┘  └──────┬──────┘
-               │                │                 │
-      ┌────────┴─────┐   ┌─────┴──────┐   ┌─────┴──────┐
-      │ Wazuh-Mgr    │   │ Windows 11 │   │ Kali Linux │
-      │ .30.10       │   │ .40.100    │   │ .99.50     │
-      │ (SIEM)       │   │ (Target)   │   │ (Attacker) │
-      └──────────────┘   └────────────┘   └────────────┘
-      │ Switch-2     │   │ Switch-1   │
-      │ .30.11       │   │ .40.11     │
-      └──────────────┘   └────────────┘
+         [Internet / External]
+                  │
+         WAN-Kali-Attacker
+         (192.168.64.x)
+                  │
+    ┌─────────────▼──────────────┐
+    │        pfSense_Aurora      │
+    │  em0: WAN 192.168.64.11    │
+    │  em1: VLAN30 172.16.30.1   │
+    │  em2: VLAN40 172.16.40.1   │
+    └──────┬──────────────┬──────┘
+           │              │
+    [UTM Default    [UTM Network 0
+     private]        bridge]
+           │              │
+  ┌────────▼──────┐  ┌────▼───────────┐
+  │  VLAN 30      │  │  VLAN 40       │
+  │  IT & Infra   │  │  Consulting    │
+  │ 172.16.30.0/24│  │ 172.16.40.0/24 │
+  ├───────────────┤  ├────────────────┤
+  │ Wazuh .30.10  │  │ Win11  .40.100 │
+  │ Switch2 .30.11│  │ Switch1 .40.11 │
+  └───────────────┘  └────────────────┘
 ```
 
 ---
@@ -138,24 +144,31 @@ in both schemes (e.g., VLAN 30 → `x.x.30.x`) to keep the mapping intuitive.
 
 ### Firewall Rules on pfSense (Inter-VLAN)
 
-#### VLAN 40 (Operations) → VLAN 30 (MGMT)
+Rules are applied per interface in pfSense (em1 = VLAN30 rules, em2 = VLAN40 rules).
+Traffic between VLANs must route through pfSense — firewall enforces zone policy.
+
+#### VLAN 40 (Consulting/em2) → VLAN 30 (IT & Infra/em1)
 ```
-✅ ALLOW: Windows 11 → Wazuh-Manager (TCP 1514, 1515)
-✅ ALLOW: Switch-1 → Wazuh-Manager (TCP 1514, 1515)
-❌ DENY:  All other traffic to MGMT zone
+✅ ALLOW: Win11 (172.16.40.100) → Wazuh (172.16.30.10) TCP 1514, 1515  [Wazuh agent]
+✅ ALLOW: Switch-1 (172.16.40.11) → Wazuh (172.16.30.10) TCP 1514, 1515 [Wazuh agent]
+❌ DENY:  All other VLAN40 → VLAN30 traffic
 ```
 
-#### VLAN 30 (MGMT) → VLAN 40 (Operations)
+#### VLAN 30 (IT & Infra/em1) → VLAN 40 (Consulting/em2)
 ```
-✅ ALLOW: Wazuh-Manager → All (for agent management)
-✅ ALLOW: Switch-2 → All (for network management)
+✅ ALLOW: Wazuh (172.16.30.10) → any  [agent management outbound]
+❌ DENY:  All other VLAN30 → VLAN40 traffic
 ```
 
-#### VLAN 99 (Attacker) → All VLANs
+#### WAN (Kali/em0) → Internal VLANs
 ```
-❌ DENY:  All traffic by default (isolated)
-✅ ALLOW: Manual rules added during penetration testing phases
+❌ DENY:  All inbound by default (pfSense WAN default behaviour)
+✅ ALLOW: Manual rules added during attack simulation (Segment 4)
 ```
+
+> ⚠️ **Current status:** Default LAN pass rules were removed during setup.
+> Must re-add via pfSense web UI (http://172.16.30.1) before VMs can communicate.
+> Anti-lockout rule (TCP 80 to pfSense from LAN) is still active.
 
 ### Expected Traffic Flows
 
@@ -242,26 +255,34 @@ UTM does not natively support 802.1Q VLAN tagging. The approach is:
 - ✅ All Wazuh services verified via `systemctl`
 - ✅ Git repo initialized and connected to GitHub
 
-### Phase 2: Network & Routing Configuration ✅ MOSTLY COMPLETE
-> Completed: April 9, 2026
+### Phase 2: VLAN & Routing Configuration 🔄 IN PROGRESS
+> Started: April 10, 2026
 
-**Architecture decision:** UTM does not support 802.1Q VLAN tagging. Separate bridge approach
-abandoned. All VMs on flat 172.16.1.0/24 (UTM "Emulated VLAN" bridge). Logical zone separation
-enforced via pfSense firewall rules based on IP ranges. This mirrors cloud-native security group
-approaches and is standard practice for hypervisor-based labs without switch hardware.
+**Architecture decision (April 10):** Moved from flat 172.16.1.x to proper separate VLAN interfaces.
+UTM does not support 802.1Q tags, but supports separate network bridges per VLAN.
+pfSense gets one NIC per VLAN — real inter-VLAN routing enforced at L3.
 
-- [x] All VMs migrated from 192.168.64.0/24 (Shared NAT) to 172.16.1.0/24 (Host Only / Emulated VLAN)
-- [x] pfSense LAN configured: 172.16.1.1/24 (static)
-- [x] Wazuh-Manager: 172.16.1.10/24 (static via netplan)
-- [x] Switch-2-Alpine: 172.16.1.11/24 (static via setup-interfaces)
-- [x] Switch-1-Alpine: 172.16.1.12/24 (static via setup-interfaces)
-- [x] Windows 11: 172.16.1.100/24 (static via Windows Settings)
-- [x] Kali: 192.168.64.10 (remains on Shared Network — natural attacker isolation)
-- [x] pfSense DHCP server active on LAN: 172.16.1.100–172.16.1.200
+**UTM network bridges:**
+- "Default (private)" = VLAN30 bridge → pfSense em1
+- "Network 0" = VLAN40 bridge → pfSense em2
+- Shared NAT = WAN → pfSense em0
+
+- [x] UTM VMs renamed with VLAN prefix for clarity
+- [x] pfSense: 3rd NIC added (em2 → VLAN40 "Network 0" bridge)
+- [x] Win11 and Switch-1 moved to "Network 0" (VLAN40) bridge in UTM
+- [x] pfSense interfaces assigned: WAN=em0, LAN=em1, OPT1=em2
+- [x] pfSense LAN (em1): 172.16.30.1/24 + DHCP 172.16.30.100-200
+- [x] pfSense OPT1 (em2): 172.16.40.1/24 + DHCP 172.16.40.100-200
+- [x] Wazuh IP updated: 172.16.30.10/24 (netplan applied)
+- [ ] ⚠️ Fix pfSense web UI access — re-add default pass rules (LAN allow all deleted)
+- [ ] Enable OPT1 interface in pfSense web UI (Interfaces → OPT1 → Enable)
+- [ ] Switch-2-Alpine: reconfigure IP to 172.16.30.11
+- [ ] Switch-1-Alpine: reconfigure IP to 172.16.40.11
+- [ ] Windows 11: reconfigure IP to 172.16.40.100
 - [ ] Configure pfSense inter-VLAN firewall rules (zone policy — see Section 5)
-- [ ] Verify ping: Windows 11 → pfSense gateway (172.16.1.1)
-- [ ] Verify ping: Switch-1 → Wazuh (172.16.1.10)
-- [ ] Verify isolation: Kali cannot reach 172.16.1.x
+- [ ] Verify ping: Wazuh → pfSense (172.16.30.1)
+- [ ] Verify ping: Win11 → pfSense (172.16.40.1)
+- [ ] Verify isolation: Kali cannot reach VLAN30 or VLAN40
 - [ ] Take screenshots of ping tests and pfSense interface config
 
 ### Phase 3: SIEM Agent Deployment 📅 PENDING

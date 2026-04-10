@@ -13,26 +13,39 @@
 **DO NOT suggest VirtualBox/VMware!**
 **DO NOT suggest downloading new VMs!**
 
-**WE ALREADY HAVE:**
-- ✅ 8 VMs deployed in UTM hypervisor on M3 Mac
-- ✅ pfSense router — LAN: 172.16.1.1/24 (confirmed April 9)
-- ✅ 2x Alpine Linux switches — 172.16.1.11 / 172.16.1.12 (confirmed April 9)
-- ✅ Wazuh SIEM fully operational at 172.16.1.10 (internal) / 192.168.64.7 (Shared NAT fallback)
-- ✅ Windows 11 at 172.16.1.100 — Wazuh agent ACTIVE (Win11-Aurora)
-- ✅ Kali at 192.168.64.10 (Shared Network — intentional isolation, no agent needed)
-- ✅ Network: flat 172.16.1.0/24 (UTM "Emulated VLAN" bridge — Host Only)
+**CURRENT STATE (April 10):**
+- ✅ 8 VMs deployed and renamed in UTM with VLAN prefix for clarity
+- ✅ pfSense_Aurora: 3 NICs — em0=WAN, em1=VLAN30 (172.16.30.1), em2=VLAN40 (172.16.40.1)
+- ✅ Wazuh SIEM at 172.16.30.10 (VLAN30 — IT & Infrastructure)
+- ✅ Kali at 192.168.64.x (WAN/external — attacker, no agent)
+- ✅ Win11 + Switch-1 moved to UTM "Network 0" bridge (VLAN40)
+- 🔜 Switch-2-Alpine: needs IP reconfigured to 172.16.30.11
+- 🔜 Switch-1-Alpine: needs IP reconfigured to 172.16.40.11
+- 🔜 Windows 11: needs IP reconfigured to 172.16.40.100
 
-**ARCHITECTURE DECISION (April 9):**
-UTM does not support 802.1Q VLAN tagging. Separate bridge approach abandoned in favour of
-flat 172.16.1.0/24 with logical segmentation enforced via pfSense firewall rules (IP-based zones).
-This mirrors cloud-native approaches (AWS Security Groups, Azure NSGs). Documented in design doc.
+**ARCHITECTURE DECISION (April 10):**
+Upgraded from flat 172.16.1.x to proper separate VLAN interfaces via UTM bridges.
+- UTM "Default (private)" bridge → VLAN30 (IT & Infrastructure) → pfSense em1
+- UTM "Network 0" bridge → VLAN40 (Consulting) → pfSense em2
+- Traffic between VLANs must route through pfSense — real inter-VLAN enforcement.
+- Kali on WAN (external attacker) — NOT VLAN51 (Dirty Lab is internal, not simulated here).
+
+**⚠️ BLOCKING ISSUE (resume here):**
+Default LAN "allow all" rules were deleted during earlier firewall session.
+Fix: open http://172.16.30.1 from Wazuh → re-add pass rules for VLAN30 + VLAN40.
+Anti-lockout rule (TCP 80 to pfSense) is still active so web UI is reachable.
 
 **REMAINING FOR SEGMENT 2:**
-- Configure pfSense firewall rules (zone policy: MGMT/OPS/ATTACKER IP ranges)
-- Configure pfSense syslog → Wazuh 172.16.1.10 UDP 514 (extension credit)
-- Run connectivity tests + screenshots (ping/traceroute between VMs)
-- Update network diagram
-- Compile PDF: Segment2_VirtualBuild_Janzen.pdf
+1. Fix pfSense pass rules via web UI (http://172.16.30.1 from Wazuh)
+2. Enable OPT1 interface in pfSense (Interfaces → OPT1 → Enable)
+3. Reconfigure Switch-2 IP to 172.16.30.11 (Alpine setup-interfaces)
+4. Reconfigure Switch-1 IP to 172.16.40.11 (Alpine setup-interfaces)
+5. Reconfigure Win11 IP to 172.16.40.100 (Windows Settings)
+6. Configure pfSense inter-VLAN firewall rules (zone policy)
+7. Configure pfSense syslog → Wazuh UDP 514 (extension credit)
+8. Run connectivity tests + screenshots
+9. Update network diagram
+10. Compile PDF: Segment2_VirtualBuild_Janzen.pdf
 
 
 **Summary from latest installation with Gemini:**
@@ -174,14 +187,16 @@ End of Planning Document
 
 | VM Name | OS | Architecture | Purpose | IP | Status |
 |---------|----|--------------|---------|----|--------|
-| Wazuh-Manager | Ubuntu 22.04 | AMD64 (emulated) | SIEM (Manager + Indexer + Dashboard) | 172.16.1.10 | ✅ Operational |
-| pfSense-Aurora | pfSense 2.7.2 | AMD64 (emulated) | Router/Firewall/DHCP | WAN: 192.168.64.11 / LAN: 172.16.1.1 | ✅ Running — firewall rules pending |
-| Switch-1-Alpine | Alpine Linux 3.23.3 | ARM64 | Virtual L2 Switch — Operations zone | 172.16.1.12 | ✅ Configured — no Wazuh agent (ARM64) |
-| Switch-2-Alpine | Alpine Linux 3.23.3 | ARM64 | Virtual L2 Switch — Management zone | 172.16.1.11 | ✅ Configured — no Wazuh agent (ARM64) |
-| Windows 11 ARM | Windows 11 Pro | ARM64 | Target endpoint | 172.16.1.100 | ✅ Wazuh agent ACTIVE |
-| Kali-Linux | Kali Linux | ARM64 | Red Team / Attacker | 192.168.64.10 | ✅ Ready — no agent (attacker node) |
-| Ubuntu 25.10 ARM | Ubuntu 25.10 | ARM64 | Spare endpoint | TBD | Optional |
-| Clone Ubuntu 22.04 AMD | Ubuntu 22.04 | AMD64 (emulated) | Backup/Testing | N/A | Backup only |
+| UTM VM Name | OS | Arch | VLAN | Role | IP | Status |
+|---|---|---|---|---|---|---|
+| pfSense_Aurora | pfSense 2.7.2 | AMD64 | WAN+30+40 | Router/Firewall/DHCP | em0:192.168.64.11 / em1:172.16.30.1 / em2:172.16.40.1 | ✅ Running |
+| VLAN30-Wazuh-Server-Ubuntu 22.04 AMD | Ubuntu 22.04 | AMD64 | VLAN30 | SIEM | 172.16.30.10 | ✅ Operational |
+| VLAN30-Switch-2-Alpine | Alpine 3.23.3 | ARM64 | VLAN30 | Virtual L2 Switch | 172.16.30.11 🔜 | Needs IP reconfigure |
+| VLAN40-Win11-Target | Windows 11 Pro | ARM64 | VLAN40 | Target endpoint | 172.16.40.100 🔜 | Needs IP reconfigure |
+| VLAN40-Switch-1-Alpine | Alpine 3.23.3 | ARM64 | VLAN40 | Virtual L2 Switch | 172.16.40.11 🔜 | Needs IP reconfigure |
+| WAN-Kali Linux 2024-Attacker | Kali Linux | ARM64 | WAN | External attacker | 192.168.64.x (DHCP) | ✅ Ready |
+| VLAN30-AdminWS-Ubuntu 25.10 ARM | Ubuntu 25.10 | ARM64 | N/A | Optional — Apple Virt only | TBD | Not in VLAN design |
+| BACKUP-Ubuntu 22.04 AMD clone | Ubuntu 22.04 | AMD64 | N/A | Backup/Testing | N/A | Backup only |
 
 ---
 
