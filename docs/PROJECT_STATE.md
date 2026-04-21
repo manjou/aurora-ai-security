@@ -90,35 +90,40 @@ Proper separate VLAN interfaces via UTM bridges — NOT flat network.
   - Risk assessment matrix
 - **Status:** Submitted and approved
 
-### 🔄 Segment 2: Virtual Infrastructure Build (IN PROGRESS)
-- **Deadline:** April 11, 2026 (PDF still to be compiled)
+### ✅ Segment 2: Virtual Infrastructure Build (COMPLETE — PDF pending submission)
+- **Deadline:** April 11, 2026
 - **Completed:**
   - ✅ 8 VMs deployed in UTM, renamed with VLAN prefix
-  - ✅ Proper VLAN interfaces via separate UTM bridges (April 10)
+  - ✅ Proper VLAN interfaces via separate UTM bridges
   - ✅ pfSense: WAN + VLAN30 (172.16.30.1) + VLAN40 (172.16.40.1)
   - ✅ Wazuh SIEM operational at 172.16.30.10
-  - ✅ Wazuh agent on Windows 11 — Active
+  - ✅ Wazuh agent on Windows 11 — Active (reconfigured to 172.16.30.10 after VLAN migration)
   - ✅ Inter-VLAN routing confirmed (Win11 ↔ Wazuh, 0% packet loss)
   - ✅ pfSense firewall rules: pass rules for LAN + VLAN40CONSULTING
-  - ✅ Screenshots 04–08 taken
-  - ✅ Simulation design document created with full architecture rationale
-
+  - ✅ Switch-2 IP → 172.16.30.11 ✅
+  - ✅ Switch-1 IP → 172.16.40.11 ✅
+  - ✅ pfSense syslog → Wazuh UDP 514 (confirmed via tcpdump — extension credit)
+  - ✅ 15 screenshots taken and named
+  - ✅ HTML document built: Segment2_VirtualBuild_Janzen.html (print to PDF)
 - **Remaining:**
-  - 🔜 Switch-2 IP → 172.16.30.11
-  - 🔜 Switch-1 IP → 172.16.40.11
-  - 🔜 Zone-policy firewall rules (replace allow-all)
-  - 🔜 pfSense syslog → Wazuh UDP 514
-  - 🔜 Compile PDF: Segment2_VirtualBuild_Janzen.pdf
+  - 🔜 Print HTML → Segment2_VirtualBuild_Janzen.pdf and submit
+  - 🔜 Zone-policy firewall rules (deferred to Segment 3 design, implemented in Segment 4)
 
-### 📅 Segment 3: Security & SOC Planning (UPCOMING)
-- **Duration:** 2 weeks (starts ~April 14)
-- **Focus:**
-  - Threat modeling (STRIDE methodology)
-  - Firewall rules & ACL design
-  - SOC workflow definition
-  - Incident response playbook
-  - Monitoring dashboard design
-- **Deliverable:** Security planning PDF
+### 🔄 Segment 3: Security & SOC Planning (IN PROGRESS)
+- **Started:** April 14, 2026
+- **Deadline:** ~April 28, 2026
+- **Deliverable:** Segment3_SecuritySOCPlan_Janzen.pdf (≤14 pages)
+- **Completed:**
+  - ✅ Threat modeling (STRIDE) — 5 threats identified and scored
+  - ✅ Framework justification (NIST CSF 2.0, ~350 words, regulatory mapping GDPR/NIS2/IT-SiG/FADP)
+  - ✅ Device hardening plan — 6 device types (pfSense, Alpine, Wazuh, Win11, Cisco, FortiGate)
+  - ✅ Logging & monitoring plan — log sources, collection architecture, retention, alerting rules, dashboards
+- **Remaining:**
+  - ✅ Firewall rules & ACL tables per VLAN zone (Section 3) — all 11 VLANs + lab rules
+  - ✅ SOC roles & workflow definition (Section 6) — tiers, SLAs, NIS2 reporting, threat hunting
+  - 🔜 Incident response playbook (Section 7)
+  - 🔜 Implementation roadmap — Gantt-style table (Section 8)
+  - 🔜 Build HTML → compile PDF: Segment3_SecuritySOCPlan_Janzen.pdf
 
 ### 📅 Segment 4: Implementation & Validation (FINAL)
 - **Duration:** 2 weeks (starts ~April 28)

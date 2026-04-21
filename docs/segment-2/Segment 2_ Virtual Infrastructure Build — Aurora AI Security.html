@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<!-- saved from url=(0103)file:///Users/berndjanzen/Documents/Aurora-AI-Security/docs/segment-2/Segment2_VirtualBuild_Janzen.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Segment 2: Virtual Infrastructure Build — Aurora AI Security</title>
+  <style>
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #ffffff;
+    }
+
+    /* ── Page Layout ───────────────────────────────────────────── */
+    .page {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 22mm;
+    }
+
+    @media print {
+      body { font-size: 10pt; }
+      .page { max-width: 100%; padding: 15mm 18mm; }
+      .page-break { page-break-before: always; }
+      .no-break { page-break-inside: avoid; }
+    }
+
+    /* ── Cover Page ────────────────────────────────────────────── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f4c75 100%);
+      color: white;
+      padding: 40mm 30mm;
+    }
+
+    .cover-logo {
+      font-size: 13pt;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #64b5f6;
+      margin-bottom: 8mm;
+    }
+
+    .cover-title {
+      font-size: 26pt;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 4mm;
+      color: #ffffff;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: #90caf9;
+      margin-bottom: 12mm;
+    }
+
+    .cover-divider {
+      width: 60mm;
+      height: 3px;
+      background: linear-gradient(90deg, #1565c0, #64b5f6, #1565c0);
+      border-radius: 2px;
+      margin: 0 auto 12mm;
+    }
+
+    .cover-meta {
+      font-size: 10pt;
+      color: #b0bec5;
+      line-height: 2.2;
+    }
+
+    .cover-meta strong {
+      color: #e3f2fd;
+    }
+
+    .cover-badge {
+      margin-top: 14mm;
+      display: inline-block;
+      background: rgba(100, 181, 246, 0.15);
+      border: 1px solid rgba(100, 181, 246, 0.4);
+      border-radius: 6px;
+      padding: 3mm 8mm;
+      font-size: 9pt;
+      color: #90caf9;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Typography ────────────────────────────────────────────── */
+    h1 {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 8mm 0 4mm;
+      padding-bottom: 2mm;
+      border-bottom: 3px solid #1565c0;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1565c0;
+      margin: 7mm 0 3mm;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin: 5mm 0 2mm;
+    }
+
+    p { margin-bottom: 3mm; }
+
+    /* ── Section Header ────────────────────────────────────────── */
+    .section-header {
+      background: linear-gradient(90deg, #1565c0, #1e3a5f);
+      color: white;
+      padding: 4mm 6mm;
+      border-radius: 4px;
+      font-size: 13pt;
+      font-weight: 700;
+      margin: 8mm 0 5mm;
+      letter-spacing: 0.5px;
+    }
+
+    .section-number {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      padding: 0 3mm;
+      margin-right: 3mm;
+      font-size: 11pt;
+    }
+
+    /* ── Info Box ──────────────────────────────────────────────── */
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #1565c0;
+      border-radius: 0 4px 4px 0;
+      padding: 3mm 5mm;
+      margin: 4mm 0;
+      font-size: 9.5pt;
+    }
+
+    .info-box.green {
+      background: #e8f5e9;
+      border-left-color: #2e7d32;
+    }
+
+    .info-box.amber {
+      background: #fff8e1;
+      border-left-color: #f57f17;
+    }
+
+    .info-box.dark {
+      background: #eceff1;
+      border-left-color: #37474f;
+    }
+
+    /* ── Tables ────────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin: 4mm 0;
+    }
+
+    thead tr {
+      background: #1565c0;
+      color: white;
+    }
+
+    thead th {
+      padding: 2.5mm 3mm;
+      text-align: left;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    tbody tr:nth-child(odd) { background: #f5f8ff; }
+    tbody tr:nth-child(even) { background: #ffffff; }
+    tbody tr:hover { background: #e3f2fd; }
+
+    tbody td {
+      padding: 2mm 3mm;
+      border-bottom: 1px solid #e0e6f0;
+      vertical-align: top;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.5mm 2.5mm;
+      border-radius: 3px;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+
+    .tag-green { background: #c8e6c9; color: #1b5e20; }
+    .tag-blue  { background: #bbdefb; color: #0d47a1; }
+    .tag-amber { background: #fff3e0; color: #e65100; }
+    .tag-red   { background: #ffcdd2; color: #b71c1c; }
+    .tag-grey  { background: #eceff1; color: #37474f; }
+
+    /* ── Code / Topology ───────────────────────────────────────── */
+    pre, code {
+      font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+      font-size: 8.5pt;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 4mm 5mm;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 3mm 0;
+      line-height: 1.5;
+    }
+
+    code {
+      background: #e8edf5;
+      color: #1565c0;
+      padding: 0.5mm 1.5mm;
+      border-radius: 2px;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* ── Screenshots ───────────────────────────────────────────── */
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+      margin: 4mm 0;
+    }
+
+    .screenshot-grid.single { grid-template-columns: 1fr; }
+    .screenshot-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .screenshot-card {
+      border: 1px solid #d0dae8;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot-caption {
+      background: #f5f8ff;
+      border-top: 1px solid #d0dae8;
+      padding: 1.5mm 3mm;
+      font-size: 8pt;
+      color: #37474f;
+    }
+
+    .screenshot-caption strong {
+      color: #1565c0;
+    }
+
+    /* ── Checklist ─────────────────────────────────────────────── */
+    .checklist { list-style: none; padding: 0; margin: 3mm 0; }
+    .checklist li { padding: 1mm 0 1mm 6mm; position: relative; font-size: 9.5pt; }
+    .checklist li::before { position: absolute; left: 0; }
+    .checklist li.done::before { content: '✅'; }
+    .checklist li.pending::before { content: '🔜'; }
+    .checklist li.skip::before { content: '⚠️'; }
+
+    /* ── Status Pills ──────────────────────────────────────────── */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3mm;
+      margin: 4mm 0;
+    }
+
+    .status-card {
+      border-radius: 5px;
+      padding: 3mm 4mm;
+      text-align: center;
+    }
+
+    .status-card.green { background: #e8f5e9; border: 1px solid #a5d6a7; }
+    .status-card.blue  { background: #e3f2fd; border: 1px solid #90caf9; }
+    .status-card.amber { background: #fff8e1; border: 1px solid #ffe082; }
+
+    .status-card .icon { font-size: 16pt; display: block; margin-bottom: 1mm; }
+    .status-card .label { font-size: 8pt; font-weight: 700; color: #37474f; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-card .value { font-size: 10pt; font-weight: 800; color: #1a1a2e; }
+
+    /* ── TOC ───────────────────────────────────────────────────── */
+    .toc { list-style: none; padding: 0; }
+    .toc li {
+      display: flex;
+      align-items: baseline;
+      padding: 1.5mm 0;
+      border-bottom: 1px dotted #d0dae8;
+      font-size: 10pt;
+    }
+    .toc-num { color: #1565c0; font-weight: 700; min-width: 12mm; }
+    .toc-title { flex: 1; }
+    .toc-dots { flex: 1; border-bottom: 1px dotted #b0bec5; margin: 0 3mm 2mm; }
+
+    /* ── Topology ──────────────────────────────────────────────── */
+    .topology {
+      background: #0f172a;
+      color: #94a3b8;
+      padding: 5mm;
+      border-radius: 5px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 8pt;
+      line-height: 1.7;
+      margin: 4mm 0;
+    }
+
+    .topology .wan   { color: #f87171; }
+    .topology .fw    { color: #60a5fa; }
+    .topology .vlan30 { color: #34d399; }
+    .topology .vlan40 { color: #a78bfa; }
+    .topology .arrow { color: #94a3b8; }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    .footer {
+      margin-top: 10mm;
+      padding-top: 3mm;
+      border-top: 1px solid #d0dae8;
+      font-size: 8pt;
+      color: #90a4ae;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Utilities ─────────────────────────────────────────────── */
+    .mt-sm { margin-top: 3mm; }
+    .mt-md { margin-top: 5mm; }
+    .mb-sm { margin-bottom: 2mm; }
+    .text-muted { color: #546e7a; font-size: 9pt; }
+    .text-center { text-align: center; }
+    .bold { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     COVER PAGE
+═══════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">Aurora AI Security GmbH</div>
+  <div class="cover-title">Segment 2<br>Virtual Infrastructure Build</div>
+  <div class="cover-subtitle">Virtualized SOC Lab on UTM / Apple Silicon</div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <strong>Student:</strong> Bernd Janzen<br>
+    <strong>Programme:</strong> Masterschool Cybersecurity Bootcamp<br>
+    <strong>Submission Date:</strong> April 12, 2026<br>
+    <strong>Segment:</strong> 2 of 4 — Network Build &amp; Configuration
+  </div>
+  <div class="cover-badge">Confidential — Academic Submission</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+
+<!-- ── Table of Contents ─────────────────────────────── -->
+<div class="page-break"></div>
+
+<h1>Table of Contents</h1>
+
+<ul class="toc">
+  <li><span class="toc-num">1.</span><span class="toc-title">Executive Summary &amp; Scope</span></li>
+  <li><span class="toc-num">2.</span><span class="toc-title">Lab Environment &amp; Hypervisor Setup</span></li>
+  <li><span class="toc-num">3.</span><span class="toc-title">VM Inventory &amp; Network Mapping</span></li>
+  <li><span class="toc-num">4.</span><span class="toc-title">VLAN Design &amp; IP Addressing</span></li>
+  <li><span class="toc-num">5.</span><span class="toc-title">Network Topology Diagram</span></li>
+  <li><span class="toc-num">6.</span><span class="toc-title">pfSense Router &amp; Firewall Configuration</span></li>
+  <li><span class="toc-num">7.</span><span class="toc-title">Wazuh SIEM Deployment</span></li>
+  <li><span class="toc-num">8.</span><span class="toc-title">Connectivity Testing &amp; Validation</span></li>
+  <li><span class="toc-num">9.</span><span class="toc-title">Extension: Syslog Centralization</span></li>
+  <li><span class="toc-num">10.</span><span class="toc-title">Submission Checklist</span></li>
+</ul>
+
+<div class="status-grid mt-md">
+  <div class="status-card green">
+    <span class="icon">🖥️</span>
+    <div class="label">Virtual Machines</div>
+    <div class="value">8 Deployed</div>
+  </div>
+  <div class="status-card blue">
+    <span class="icon">🔒</span>
+    <div class="label">VLANs Configured</div>
+    <div class="value">2 Active</div>
+  </div>
+  <div class="status-card green">
+    <span class="icon">📡</span>
+    <div class="label">SIEM Status</div>
+    <div class="value">Operational</div>
+  </div>
+</div>
+
+
+<!-- ══════════════ SECTION 1 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">1</span> Executive Summary &amp; Scope</div>
+
+<p>This document describes the virtual infrastructure build for the Aurora AI Security GmbH lab environment, completed as part of Segment 2 of the Masterschool Cybersecurity Bootcamp.</p>
+
+<p>The lab simulates a <strong>miniaturized subset</strong> of the Aurora production network, demonstrating VLAN segmentation, inter-VLAN routing, firewall enforcement, and centralized SIEM monitoring — all on a single MacBook Air M3 using the UTM hypervisor.</p>
+
+<h2>Simulation vs. Production Deviations</h2>
+
+<div class="info-box">
+  <strong>IP Addressing:</strong> Production uses <code>10.10.x.x</code> (Freiburg HQ). The simulation uses <code>172.16.x.x</code> to avoid conflicts with UTM's NAT range (<code>192.168.64.0/24</code>) and to clearly separate lab traffic from hypervisor management traffic. The third octet mirrors the VLAN ID in both schemes (e.g., VLAN 30 → <code>x.x.30.x</code>).
+</div>
+
+<div class="info-box mt-sm">
+  <strong>SIEM Platform:</strong> Production specifies Splunk / Microsoft Sentinel. The simulation uses <strong>Wazuh 4.14.3</strong> as the open-source equivalent, providing identical functionality (log collection, indexing, alerting, dashboards) within lab resource constraints.
+</div>
+
+<div class="info-box mt-sm">
+  <strong>VLAN Technology:</strong> UTM does not support 802.1Q VLAN tagging. The solution uses <strong>separate virtual network bridges</strong> per VLAN — one UTM bridge per segment. pfSense receives one NIC per bridge, enforcing real inter-VLAN routing at Layer 3.
+</div>
+
+<h2>VLAN Mapping: Simulation → Production</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Sim. VLAN</th>
+      <th>Simulation Name</th>
+      <th>Production VLAN</th>
+      <th>Production Name</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>30</strong></td>
+      <td>IT &amp; Infrastructure</td>
+      <td><strong>30</strong></td>
+      <td>IT &amp; Infrastructure</td>
+      <td>SIEM and IT systems live here in both designs</td>
+    </tr>
+    <tr>
+      <td><strong>40</strong></td>
+      <td>Consulting</td>
+      <td><strong>40</strong></td>
+      <td>Consulting</td>
+      <td>Client workstations; Win11 represents a consulting endpoint</td>
+    </tr>
+    <tr>
+      <td>WAN</td>
+      <td>External Attacker</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>Kali on WAN (192.168.64.x) — simulates external internet attacker. VLAN 51 (Dirty Lab) not simulated due to resource constraints</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════ SECTION 2 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">2</span> Lab Environment &amp; Hypervisor Setup</div>
+
+<h2>Host System</h2>
+
+<table>
+  <thead><tr><th>Component</th><th>Details</th></tr></thead>
+  <tbody>
+    <tr><td>Hardware</td><td>MacBook Air M3, 16 GB unified RAM</td></tr>
+    <tr><td>Hypervisor</td><td>UTM 4.x (QEMU / Apple Virtualization Framework)</td></tr>
+    <tr><td>ARM64 VMs</td><td>Native execution via Apple Hypervisor framework</td></tr>
+    <tr><td>AMD64 VMs</td><td>Full QEMU emulation (higher CPU overhead)</td></tr>
+    <tr><td>VLAN 30 Bridge</td><td>UTM "Default (private)" Host-Only network</td></tr>
+    <tr><td>VLAN 40 Bridge</td><td>UTM "Network 0" Host-Only network</td></tr>
+    <tr><td>WAN</td><td>UTM Shared Network (NAT) — 192.168.64.0/24</td></tr>
+  </tbody>
+</table>
+
+<h2>Key Technical Constraints &amp; Solutions</h2>
+
+<table>
+  <thead><tr><th>Constraint</th><th>Impact</th><th>Solution Applied</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>UTM has no 802.1Q VLAN tagging</td>
+      <td>Cannot tag VLAN traffic on a shared bridge</td>
+      <td>Separate UTM Host-Only bridge per VLAN; pfSense gets one NIC per bridge</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 24.04 AMD64 under Rosetta</td>
+      <td>Java JVM segfaults on Wazuh indexer</td>
+      <td>Downgraded to Ubuntu 22.04 AMD64</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 25.10 ARM uses Apple Virtualization Framework</td>
+      <td>No Host-Only network support — cannot join VLAN bridges</td>
+      <td>Excluded from VLAN design; used as optional admin workstation</td>
+    </tr>
+    <tr>
+      <td>Alpine Linux ARM64 — no Wazuh package</td>
+      <td>Cannot install Wazuh agent on virtual switches</td>
+      <td>pfSense syslog forwarding used as mitigation (industry standard)</td>
+    </tr>
+    <tr>
+      <td>Mac host cannot reach UTM Host-Only bridges</td>
+      <td>Cannot access pfSense web UI from Mac directly</td>
+      <td>pfSense web UI accessed from Win11 (VLAN40) and Wazuh (VLAN30)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Resource Footprint</h2>
+
+<table>
+  <thead><tr><th>VM</th><th>RAM</th><th>Disk</th><th>vCPU</th></tr></thead>
+  <tbody>
+    <tr><td>pfSense_Aurora</td><td>1.5 GB</td><td>~8 GB</td><td>2</td></tr>
+    <tr><td>Wazuh-Server</td><td>4 GB</td><td>~20 GB</td><td>2</td></tr>
+    <tr><td>Windows 11 ARM</td><td>4 GB</td><td>60 GB</td><td>2</td></tr>
+    <tr><td>Kali Linux ARM</td><td>2 GB</td><td>30 GB</td><td>2</td></tr>
+    <tr><td>Switch-1-Alpine</td><td>256 MB</td><td>2 GB</td><td>1</td></tr>
+    <tr><td>Switch-2-Alpine</td><td>256 MB</td><td>2 GB</td><td>1</td></tr>
+    <tr><td><strong>TOTAL</strong></td><td><strong>~12 GB</strong></td><td><strong>~122 GB</strong></td><td><strong>10</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="info-box green">
+  <strong>Viable on 16 GB M3 MacBook</strong> — host OS uses ~4 GB, leaving ~12 GB for VMs. All VMs confirmed running simultaneously without swap pressure.
+</div>
+
+
+<!-- ══════════════ SECTION 3 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">3</span> VM Inventory &amp; Network Mapping</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>UTM VM Name</th>
+      <th>OS / Arch</th>
+      <th>VLAN</th>
+      <th>IP Address</th>
+      <th>Role</th>
+      <th>Maps to Production</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>pfSense_Aurora</strong></td>
+      <td>pfSense 2.7.2<br>AMD64</td>
+      <td>WAN + 30 + 40</td>
+      <td>em0: 192.168.64.11<br>em1: 172.16.30.1<br>em2: 172.16.40.1</td>
+      <td>Inter-VLAN Router + Firewall + DHCP</td>
+      <td>FortiGate NGFW + Cisco Catalyst 9300L L3 Core</td>
+      <td><span class="tag tag-green">✅ Running</span></td>
+    </tr>
+    <tr>
+      <td><strong>VLAN30-Wazuh-Server</strong></td>
+      <td>Ubuntu 22.04<br>AMD64</td>
+      <td>VLAN 30</td>
+      <td>172.16.30.10</td>
+      <td>SIEM — log collection, alerting, dashboard</td>
+      <td>Splunk / Microsoft Sentinel (VLAN 30)</td>
+      <td><span class="tag tag-green">✅ Operational</span></td>
+    </tr>
+    <tr>
+      <td><strong>VLAN30-Switch-2-Alpine</strong></td>
+      <td>Alpine 3.23.3<br>ARM64</td>
+      <td>VLAN 30</td>
+      <td>172.16.30.11</td>
+      <td>Virtual L2 Switch — IT &amp; Infrastructure zone</td>
+      <td>Cisco Catalyst 9200L access switch</td>
+      <td><span class="tag tag-green">✅ Configured</span></td>
+    </tr>
+    <tr>
+      <td><strong>VLAN40-Win11-Target</strong></td>
+      <td>Windows 11 Pro<br>ARM64</td>
+      <td>VLAN 40</td>
+      <td>172.16.40.100</td>
+      <td>Target endpoint with Wazuh agent</td>
+      <td>Consulting workstation (VLAN 40)</td>
+      <td><span class="tag tag-green">✅ Configured</span></td>
+    </tr>
+    <tr>
+      <td><strong>VLAN40-Switch-1-Alpine</strong></td>
+      <td>Alpine 3.23.3<br>ARM64</td>
+      <td>VLAN 40</td>
+      <td>172.16.40.11</td>
+      <td>Virtual L2 Switch — Consulting zone</td>
+      <td>Cisco Catalyst 9200L access switch</td>
+      <td><span class="tag tag-green">✅ Configured</span></td>
+    </tr>
+    <tr>
+      <td><strong>WAN-Kali-Attacker</strong></td>
+      <td>Kali Linux 2024<br>ARM64</td>
+      <td>WAN (external)</td>
+      <td>192.168.64.x (DHCP)</td>
+      <td>External attacker — internet threat actor simulation</td>
+      <td>External adversary (not internal VLAN 51)</td>
+      <td><span class="tag tag-blue">✅ Ready</span></td>
+    </tr>
+    <tr>
+      <td><strong>VLAN30-AdminWS-Ubuntu</strong></td>
+      <td>Ubuntu 25.10<br>ARM64</td>
+      <td>N/A</td>
+      <td>TBD</td>
+      <td>Optional admin workstation</td>
+      <td>Admin workstation</td>
+      <td><span class="tag tag-grey">⚠️ Excluded — no Host-Only</span></td>
+    </tr>
+    <tr>
+      <td><strong>BACKUP-Ubuntu-22.04-AMD</strong></td>
+      <td>Ubuntu 22.04<br>AMD64</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Backup / rollback clone</td>
+      <td>—</td>
+      <td><span class="tag tag-grey">Backup only</span></td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════ SECTION 4 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">4</span> VLAN Design &amp; IP Addressing</div>
+
+<h2>VLAN Scheme</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>VLAN ID</th>
+      <th>Name</th>
+      <th>Subnet</th>
+      <th>Gateway</th>
+      <th>pfSense NIC</th>
+      <th>UTM Bridge</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>30</strong></td>
+      <td>IT &amp; Infrastructure</td>
+      <td>172.16.30.0/24</td>
+      <td>172.16.30.1</td>
+      <td>em1 (LAN)</td>
+      <td>Default (private)</td>
+      <td>SIEM, IT systems, switches</td>
+    </tr>
+    <tr>
+      <td><strong>40</strong></td>
+      <td>Consulting</td>
+      <td>172.16.40.0/24</td>
+      <td>172.16.40.1</td>
+      <td>em2 (OPT1)</td>
+      <td>Network 0</td>
+      <td>Client endpoints, consulting workstations</td>
+    </tr>
+    <tr>
+      <td>WAN</td>
+      <td>External / Internet</td>
+      <td>192.168.64.0/24</td>
+      <td>192.168.64.1</td>
+      <td>em0 (WAN)</td>
+      <td>Shared NAT</td>
+      <td>Kali attacker, internet uplink</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>IP Address Assignments</h2>
+
+<table>
+  <thead>
+    <tr><th>VLAN</th><th>IP Address</th><th>Host</th><th>Assignment</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="4"><strong>VLAN 30</strong><br>172.16.30.0/24</td><td>172.16.30.1</td><td>pfSense (em1)</td><td>Static — gateway</td></tr>
+    <tr><td>172.16.30.10</td><td>Wazuh SIEM Server</td><td>Static — netplan</td></tr>
+    <tr><td>172.16.30.11</td><td>Switch-2-Alpine</td><td>Static — setup-interfaces</td></tr>
+    <tr><td>172.16.30.100–200</td><td>DHCP Pool</td><td>pfSense DHCP server</td></tr>
+    <tr><td rowspan="4"><strong>VLAN 40</strong><br>172.16.40.0/24</td><td>172.16.40.1</td><td>pfSense (em2)</td><td>Static — gateway</td></tr>
+    <tr><td>172.16.40.11</td><td>Switch-1-Alpine</td><td>Static — setup-interfaces</td></tr>
+    <tr><td>172.16.40.100</td><td>Windows 11 Target</td><td>Static — Windows Settings</td></tr>
+    <tr><td>172.16.40.100–200</td><td>DHCP Pool</td><td>pfSense DHCP server</td></tr>
+    <tr><td><strong>WAN</strong><br>192.168.64.0/24</td><td>192.168.64.11</td><td>pfSense (em0)</td><td>DHCP from UTM NAT</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box dark mt-sm">
+  <strong>Design Note:</strong> The third octet mirrors the VLAN ID in both production (<code>10.10.x.x</code>) and simulation (<code>172.16.x.x</code>) — e.g., VLAN 30 → <code>172.16.<strong>30</strong>.x</code>. This makes the mapping intuitive across both environments.
+</div>
+
+
+<!-- ══════════════ SECTION 5 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">5</span> Network Topology Diagram</div>
+
+<div class="topology">
+<pre>                    ┌─────────────────────────────────────────┐
+                    │       UTM Shared NAT (WAN)              │
+                    │         192.168.64.0/24                 │
+                    │                                         │
+                    │  ┌──────────────────────┐               │
+                    │  │  WAN-Kali-Attacker   │               │
+                    │  │  Kali Linux ARM64    │               │
+                    │  │  192.168.64.x (DHCP) │               │
+                    │  └──────────┬───────────┘               │
+                    └─────────────┼───────────────────────────┘
+                                  │ em0 (WAN)
+                    ┌─────────────▼───────────────────────────┐
+                    │           pfSense_Aurora                │
+                    │         pfSense 2.7.2 AMD64             │
+                    │  em0: 192.168.64.11  (WAN / NAT)        │
+                    │  em1: 172.16.30.1    (LAN  / VLAN30)    │
+                    │  em2: 172.16.40.1    (OPT1 / VLAN40)    │
+                    │  ┌──────────────────────────────────┐   │
+                    │  │  Firewall + Inter-VLAN Routing   │   │
+                    │  │  DHCP: .30.100–200 / .40.100–200 │   │
+                    │  └──────────────────────────────────┘   │
+                    └──────────┬──────────────────┬───────────┘
+                               │ em1              │ em2
+               ┌───────────────▼──┐          ┌───▼──────────────────┐
+               │  UTM "Default    │          │  UTM "Network 0"     │
+               │   private" bridge│          │   bridge             │
+               │  VLAN 30         │          │  VLAN 40             │
+               │  172.16.30.0/24  │          │  172.16.40.0/24      │
+               ├──────────────────┤          ├──────────────────────┤
+               │ Wazuh-Server     │          │ Win11-Target         │
+               │ 172.16.30.10     │          │ 172.16.40.100        │
+               │ Ubuntu 22.04     │◄ syslog ─┤ Wazuh Agent Active   │
+               │ SIEM + Dashboard │  (UDP514)│ Windows 11 Pro ARM64 │
+               ├──────────────────┤          ├──────────────────────┤
+               │ Switch-2-Alpine  │          │ Switch-1-Alpine      │
+               │ 172.16.30.11     │          │ 172.16.40.11         │
+               │ Virtual L2 Switch│          │ Virtual L2 Switch    │
+               └──────────────────┘          └──────────────────────┘
+                        ▲
+                        │ syslog UDP 514
+                        │
+               pfSense → Wazuh log forwarding (extension)
+</pre>
+</div>
+
+<div class="info-box green mt-sm">
+  <strong>Key Design Decision:</strong> UTM does not support 802.1Q VLAN tagging. Instead, separate UTM Host-Only bridges are used — one per VLAN. pfSense receives a dedicated NIC per bridge, enabling real Layer 3 inter-VLAN routing and firewall enforcement.
+</div>
+
+
+<!-- ══════════════ SECTION 6 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">6</span> pfSense Router &amp; Firewall Configuration</div>
+
+<h2>Interface Summary</h2>
+
+<table>
+  <thead><tr><th>Interface</th><th>Name in pfSense</th><th>NIC</th><th>IP</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td>WAN</td><td>wan</td><td>em0</td><td>192.168.64.11 (DHCP)</td><td>Internet uplink / Kali attacker zone</td></tr>
+    <tr><td>LAN</td><td>lan</td><td>em1</td><td>172.16.30.1/24</td><td>VLAN 30 — IT &amp; Infrastructure</td></tr>
+    <tr><td>OPT1</td><td>VLAN40CONSULTING</td><td>em2</td><td>172.16.40.1/24</td><td>VLAN 40 — Consulting</td></tr>
+  </tbody>
+</table>
+
+<h2>Firewall Rules</h2>
+
+<h3>LAN (VLAN 30 — IT &amp; Infrastructure)</h3>
+<table>
+  <thead><tr><th>Action</th><th>Protocol</th><th>Source</th><th>Destination</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>IPv4 *</td><td>LAN net</td><td>*</td><td>Allow all VLAN30 outbound (current state)</td></tr>
+    <tr><td><span class="tag tag-blue">PASS</span></td><td>TCP</td><td>LAN net</td><td>This firewall port 80/443</td><td>Anti-lockout — web UI access</td></tr>
+  </tbody>
+</table>
+
+<h3>VLAN40CONSULTING (VLAN 40 — Consulting)</h3>
+<table>
+  <thead><tr><th>Action</th><th>Protocol</th><th>Source</th><th>Destination</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>IPv4 *</td><td>VLAN40CONSULTING net</td><td>*</td><td>Allow all VLAN40 outbound (current state)</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box amber mt-sm">
+  <strong>Planned for Segment 3:</strong> Replace allow-all rules with restrictive zone-policy rules — e.g., Win11 → Wazuh TCP 1514/1515 only; block all other cross-VLAN traffic. Current pass rules are in place to enable testing and SIEM agent connectivity.
+</div>
+
+<h2>Screenshots — pfSense Configuration</h2>
+
+<div class="screenshot-grid">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/04_pfsense-dashboard.png" alt="pfSense Dashboard">
+    <div class="screenshot-caption"><strong>Screenshot 04</strong> — pfSense Dashboard showing WAN (em0), LAN/VLAN30 (em1), and VLAN40CONSULTING (em2) interfaces</div>
+  </div>
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/05_pfsense-firewall-rules.png" alt="pfSense Firewall Rules LAN">
+    <div class="screenshot-caption"><strong>Screenshot 05</strong> — pfSense Firewall Rules — LAN (VLAN 30 IT &amp; Infrastructure)</div>
+  </div>
+</div>
+
+<div class="screenshot-grid mt-sm">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/06_pfsense-firewall-rules.png" alt="pfSense Firewall Rules VLAN40">
+    <div class="screenshot-caption"><strong>Screenshot 06</strong> — pfSense Firewall Rules — VLAN40CONSULTING (VLAN 40 Consulting)</div>
+  </div>
+</div>
+
+
+<!-- ══════════════ SECTION 7 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">7</span> Wazuh SIEM Deployment</div>
+
+<h2>Installation Summary</h2>
+
+<table>
+  <thead><tr><th>Component</th><th>Details</th></tr></thead>
+  <tbody>
+    <tr><td>Version</td><td>Wazuh 4.14.3 (all-in-one installation)</td></tr>
+    <tr><td>Host</td><td>Ubuntu 22.04 AMD64 — 172.16.30.10 (VLAN 30)</td></tr>
+    <tr><td>Wazuh Manager</td><td>Log collection, correlation, alerting — port 1514/1515 (agents), 514 (syslog)</td></tr>
+    <tr><td>Wazuh Indexer</td><td>OpenSearch-based data storage — port 9200</td></tr>
+    <tr><td>Wazuh Dashboard</td><td>Web UI — https://172.16.30.10 (port 443)</td></tr>
+    <tr><td>Filebeat</td><td>Log shipper between Manager and Indexer</td></tr>
+    <tr><td>Dashboard Config Fix</td><td>Changed opensearch_dashboards.yml to use <code>https://</code> (not http)</td></tr>
+    <tr><td>API Timeout Fix</td><td>Increased API timeout from 20,000 ms to 60,000 ms</td></tr>
+  </tbody>
+</table>
+
+<h2>Wazuh Agent — Windows 11</h2>
+
+<p>The Wazuh agent was installed on <strong>VLAN40-Win11-Target</strong> via the MSI installer, configured to report to the Wazuh manager at <code>172.16.30.10</code>. Agent-to-manager communication uses TCP port 1514 (encrypted), routed through pfSense inter-VLAN.</p>
+
+<div class="screenshot-grid">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/02_wazuh-agent-powershell-install.png" alt="Wazuh Agent Install">
+    <div class="screenshot-caption"><strong>Screenshot 02</strong> — Wazuh agent installation on Windows 11 via PowerShell MSI installer</div>
+  </div>
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/15_wazuh-agent-active-final.png" alt="Wazuh Agent Active">
+    <div class="screenshot-caption"><strong>Screenshot 15</strong> — Wazuh Dashboard showing Win11-Aurora agent status: <strong>Active (1)</strong> — confirmed after agent reconfigured to 172.16.30.10</div>
+  </div>
+</div>
+
+<h2>Wazuh Dashboard Overview</h2>
+
+<div class="screenshot-grid single">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/01_wazuh-dashboard-overview.png" alt="Wazuh Dashboard Overview">
+    <div class="screenshot-caption"><strong>Screenshot 01</strong> — Wazuh Dashboard overview — security events, alerts, and agent monitoring active</div>
+  </div>
+</div>
+
+<h2>Alpine Switches — Wazuh Agent Not Available</h2>
+
+<div class="info-box amber">
+  <strong>Note:</strong> Switch-1-Alpine and Switch-2-Alpine run Alpine Linux ARM64 (aarch64). Wazuh agent packages are x86_64 only — no ARM64 build is available. <strong>Mitigation:</strong> pfSense syslog forwarding is used to capture network infrastructure logs in Wazuh. This is standard industry practice — not all devices support endpoint agents; syslog is the accepted alternative for network infrastructure monitoring.
+</div>
+
+
+<!-- ══════════════ SECTION 8 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">8</span> Connectivity Testing &amp; Validation</div>
+
+<h2>Test Results Summary</h2>
+
+<table>
+  <thead>
+    <tr><th>Test</th><th>Source</th><th>Destination</th><th>Method</th><th>Result</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Inter-VLAN routing (VLAN40 → VLAN30)</td>
+      <td>Win11 — 172.16.40.100</td>
+      <td>Wazuh — 172.16.30.10</td>
+      <td>ping -n 4</td>
+      <td><span class="tag tag-green">✅ 0% loss, TTL=63</span></td>
+    </tr>
+    <tr>
+      <td>Inter-VLAN routing (VLAN30 → VLAN40)</td>
+      <td>Wazuh — 172.16.30.10</td>
+      <td>Win11 — 172.16.40.100</td>
+      <td>ping -c 4</td>
+      <td><span class="tag tag-green">✅ 0% loss, TTL=127</span></td>
+    </tr>
+    <tr>
+      <td>Switch-2 to pfSense gateway</td>
+      <td>Switch-2 — 172.16.30.11</td>
+      <td>pfSense — 172.16.30.1</td>
+      <td>ping -c 3</td>
+      <td><span class="tag tag-green">✅ 3/3 packets received</span></td>
+    </tr>
+    <tr>
+      <td>Switch-1 to pfSense gateway</td>
+      <td>Switch-1 — 172.16.40.11</td>
+      <td>pfSense — 172.16.40.1</td>
+      <td>ping -c 3</td>
+      <td><span class="tag tag-green">✅ 3/3 packets received</span></td>
+    </tr>
+    <tr>
+      <td>Wazuh agent communication</td>
+      <td>Win11 — 172.16.40.100</td>
+      <td>Wazuh — 172.16.30.10:1514</td>
+      <td>Wazuh agent service</td>
+      <td><span class="tag tag-green">✅ Agent Active</span></td>
+    </tr>
+    <tr>
+      <td>pfSense web UI — VLAN30</td>
+      <td>Wazuh host browser</td>
+      <td>http://172.16.30.1</td>
+      <td>HTTP</td>
+      <td><span class="tag tag-green">✅ Accessible</span></td>
+    </tr>
+    <tr>
+      <td>pfSense web UI — VLAN40</td>
+      <td>Win11 browser</td>
+      <td>http://172.16.40.1</td>
+      <td>HTTP</td>
+      <td><span class="tag tag-green">✅ Accessible</span></td>
+    </tr>
+    <tr>
+      <td>Wazuh Dashboard</td>
+      <td>Win11 browser</td>
+      <td>https://172.16.30.10</td>
+      <td>HTTPS</td>
+      <td><span class="tag tag-green">✅ Accessible</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Ping Screenshots — Inter-VLAN Routing</h2>
+
+<div class="screenshot-grid">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/07_ping-win11-to-wazuh.png" alt="Ping Win11 to Wazuh">
+    <div class="screenshot-caption"><strong>Screenshot 07</strong> — Ping from Win11 (172.16.40.100) → Wazuh (172.16.30.10): 0% packet loss, TTL=63 confirms inter-VLAN routing via pfSense</div>
+  </div>
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/08_ping-wazuh-to-win11.png" alt="Ping Wazuh to Win11">
+    <div class="screenshot-caption"><strong>Screenshot 08</strong> — Ping from Wazuh (172.16.30.10) → Win11 (172.16.40.100): 0% packet loss confirms bi-directional routing</div>
+  </div>
+</div>
+
+<h2>Switch IP Configuration Screenshots</h2>
+
+<div class="screenshot-grid">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/09_switch2-ip-config.png" alt="Switch-2 IP Config">
+    <div class="screenshot-caption"><strong>Screenshot 09</strong> — Switch-2-Alpine reconfigured to 172.16.30.11 on VLAN 30 bridge</div>
+  </div>
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/10_switch1-ip-config.png" alt="Switch-1 IP Config">
+    <div class="screenshot-caption"><strong>Screenshot 10</strong> — Switch-1-Alpine reconfigured to 172.16.40.11 on VLAN 40 bridge</div>
+  </div>
+</div>
+
+
+<!-- ══════════════ SECTION 9 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">9</span> Extension: Syslog Centralization</div>
+
+<div class="info-box green">
+  <strong>Extension Credit:</strong> This section implements the "Syslog Centralization" extension from the Segment 2 advanced tasks — deploying pfSense log forwarding to Wazuh as a syslog server.
+</div>
+
+<h2>Architecture</h2>
+
+<p>pfSense forwards system and firewall logs to Wazuh Manager via <strong>UDP syslog on port 514</strong>. Wazuh listens for syslog on its VLAN 30 interface and processes incoming pfSense events through its detection engine.</p>
+
+<table>
+  <thead><tr><th>Component</th><th>Configuration</th></tr></thead>
+  <tbody>
+    <tr><td>pfSense syslog destination</td><td>172.16.30.10, UDP 514</td></tr>
+    <tr><td>Log categories forwarded</td><td>System Events, Firewall Events</td></tr>
+    <tr><td>Wazuh listener</td><td>ossec.conf — second &lt;remote&gt; block, connection=syslog, port=514, protocol=udp</td></tr>
+    <tr><td>Allowed source IP</td><td>172.16.30.1 (pfSense VLAN30 interface)</td></tr>
+    <tr><td>Wazuh port binding</td><td>wazuh-remoted listening on 0.0.0.0:514 UDP (verified via ss -ulnp)</td></tr>
+  </tbody>
+</table>
+
+<h2>Wazuh ossec.conf — Remote Block</h2>
+
+<pre><code>&lt;!-- Agent communication (existing) --&gt;
+&lt;remote&gt;
+  &lt;connection&gt;secure&lt;/connection&gt;
+  &lt;port&gt;1514&lt;/port&gt;
+  &lt;protocol&gt;tcp&lt;/protocol&gt;
+  &lt;queue_size&gt;131072&lt;/queue_size&gt;
+&lt;/remote&gt;
+
+&lt;!-- pfSense syslog listener (added for extension) --&gt;
+&lt;remote&gt;
+  &lt;connection&gt;syslog&lt;/connection&gt;
+  &lt;port&gt;514&lt;/port&gt;
+  &lt;protocol&gt;udp&lt;/protocol&gt;
+  &lt;allowed-ips&gt;172.16.30.1&lt;/allowed-ips&gt;
+&lt;/remote&gt;</code></pre>
+
+<h2>Verification Screenshots</h2>
+
+<div class="screenshot-grid">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/11_pfsense-remote-logging-opitions.png" alt="pfSense Remote Logging">
+    <div class="screenshot-caption"><strong>Screenshot 11</strong> — pfSense remote logging settings: 172.16.30.10, UDP 514, System Events + Firewall Events enabled</div>
+  </div>
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/12_wazuh-ossec-config.png" alt="Wazuh ossec.conf">
+    <div class="screenshot-caption"><strong>Screenshot 12</strong> — Wazuh ossec.conf showing syslog remote block (port 514, UDP, allowed-ips: 172.16.30.1)</div>
+  </div>
+</div>
+
+<div class="screenshot-grid single mt-sm">
+  <div class="screenshot-card no-break">
+    <img src="./Segment 2_ Virtual Infrastructure Build — Aurora AI Security_files/13_tcpdump-syslog-proof.png" alt="tcpdump syslog proof">
+    <div class="screenshot-caption"><strong>Screenshot 13</strong> — tcpdump on Wazuh confirming pfSense syslog packets arriving: <em>pfSense.home.arpa.syslog → ubuntu2server.syslog</em> — SYSLOG daemon.error and auth.emergency events received on UDP 514</div>
+  </div>
+</div>
+
+<div class="info-box green mt-sm">
+  <strong>Result:</strong> Syslog forwarding confirmed operational. tcpdump shows pfSense actively sending System Events and Firewall Events to Wazuh at 172.16.30.10:514. Wazuh-remoted confirmed listening on 0.0.0.0:514 UDP. This extends SIEM coverage to network infrastructure devices that cannot run endpoint agents.
+</div>
+
+
+<!-- ══════════════ SECTION 10 ══════════════ -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">10</span> Submission Checklist</div>
+
+<ul class="checklist">
+  <li class="done">Virtualization platform installed — UTM 4.x on MacBook Air M3</li>
+  <li class="done">≥3 VMs running simultaneously — 6 active VMs confirmed</li>
+  <li class="done">Router VM (pfSense_Aurora) instantiated with 3 NICs (WAN + VLAN30 + VLAN40)</li>
+  <li class="done">Two switch VMs (Switch-1-Alpine, Switch-2-Alpine) instantiated and configured</li>
+  <li class="done">Two endpoint VMs (Wazuh-Server, Win11-Target) instantiated</li>
+  <li class="done">VLAN interfaces configured — separate UTM bridges per VLAN (no 802.1Q required)</li>
+  <li class="done">IP addressing applied per VLAN — matches Segment 1 design intent (with documented 172.16.x.x deviation)</li>
+  <li class="done">DHCP scopes configured on pfSense for both VLANs</li>
+  <li class="done">Inter-VLAN routing implemented and tested (0% packet loss Win11 ↔ Wazuh)</li>
+  <li class="done">Firewall rules configured on pfSense (LAN + VLAN40CONSULTING pass rules)</li>
+  <li class="done">Wazuh SIEM deployed and operational (Manager + Indexer + Dashboard + Filebeat)</li>
+  <li class="done">Wazuh agent installed on Windows 11 — Active status confirmed</li>
+  <li class="done">Connectivity tests with screenshots (ping Win11 ↔ Wazuh, switch pings)</li>
+  <li class="done">VM inventory table with network mapping</li>
+  <li class="done">Updated network topology diagram</li>
+  <li class="done">Configuration summary documented</li>
+  <li class="done">Extension: Syslog centralization — pfSense → Wazuh UDP 514 (confirmed via tcpdump)</li>
+</ul>
+
+<div class="info-box amber mt-sm">
+  <strong>Planned for Segment 3:</strong> Replace allow-all firewall rules with restrictive zone-policy rules. Implement proper inter-VLAN ACLs (Win11 → Wazuh TCP 1514 only, deny all other cross-VLAN traffic). STRIDE threat modelling will drive rule design.
+</div>
+
+<div class="info-box dark mt-sm">
+  <strong>Out of Scope (Segment 4):</strong> Attack simulation from Kali Linux, Wazuh alert tuning, and full incident response workflow — these will be executed in the Segment 4 capstone.
+</div>
+
+
+<!-- ── Footer ─────────────────────────────────────── -->
+<div class="footer">
+  <span>Aurora AI Security GmbH — Masterschool Cybersecurity Bootcamp</span>
+  <span>Segment 2: Virtual Infrastructure Build — Bernd Janzen — April 2026</span>
+</div>
+
+</div><!-- .page -->
+
+
+</body></html>
