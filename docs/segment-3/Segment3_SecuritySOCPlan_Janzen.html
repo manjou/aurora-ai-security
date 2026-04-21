@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Segment 3: Security & SOC Plan — Aurora AI Security</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.5;
+      color: #1a1a2e;
+    }
+
+    .page {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 16mm 20mm;
+    }
+
+    @media print {
+      body { font-size: 9pt; }
+      .page { padding: 12mm 16mm; }
+      .page-break { page-break-before: always; }
+      .no-break { page-break-inside: avoid; }
+    }
+
+    /* Cover */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f4c75 100%);
+      color: white;
+      padding: 30mm;
+    }
+    .cover-logo { font-size: 11pt; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #64b5f6; margin-bottom: 6mm; }
+    .cover-title { font-size: 24pt; font-weight: 800; line-height: 1.2; margin-bottom: 3mm; }
+    .cover-subtitle { font-size: 13pt; color: #90caf9; margin-bottom: 10mm; }
+    .cover-divider { width: 50mm; height: 3px; background: linear-gradient(90deg, #1565c0, #64b5f6, #1565c0); border-radius: 2px; margin: 0 auto 10mm; }
+    .cover-meta { font-size: 9.5pt; color: #b0bec5; line-height: 2.2; }
+    .cover-meta strong { color: #e3f2fd; }
+    .cover-badge { margin-top: 12mm; display: inline-block; background: rgba(100,181,246,0.15); border: 1px solid rgba(100,181,246,0.4); border-radius: 6px; padding: 2mm 6mm; font-size: 8pt; color: #90caf9; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* Typography */
+    h1 { font-size: 15pt; font-weight: 800; color: #0f172a; margin: 6mm 0 3mm; padding-bottom: 2mm; border-bottom: 3px solid #1565c0; }
+    h2 { font-size: 11pt; font-weight: 700; color: #1565c0; margin: 5mm 0 2mm; }
+    h3 { font-size: 10pt; font-weight: 700; color: #1e3a5f; margin: 4mm 0 2mm; }
+    p { margin-bottom: 2mm; font-size: 9.5pt; }
+
+    .section-header {
+      background: linear-gradient(90deg, #1565c0, #1e3a5f);
+      color: white;
+      padding: 3mm 5mm;
+      border-radius: 4px;
+      font-size: 11pt;
+      font-weight: 700;
+      margin: 6mm 0 4mm;
+    }
+    .section-number { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 3px; padding: 0 2mm; margin-right: 2mm; }
+
+    /* Info boxes */
+    .info-box { background: #e3f2fd; border-left: 4px solid #1565c0; border-radius: 0 4px 4px 0; padding: 2mm 4mm; margin: 3mm 0; font-size: 9pt; }
+    .info-box.green { background: #e8f5e9; border-left-color: #2e7d32; }
+    .info-box.amber { background: #fff8e1; border-left-color: #f57f17; }
+    .info-box.dark  { background: #eceff1; border-left-color: #37474f; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin: 3mm 0; }
+    thead tr { background: #1565c0; color: white; }
+    thead th { padding: 2mm 2.5mm; text-align: left; font-weight: 700; }
+    tbody tr:nth-child(odd)  { background: #f5f8ff; }
+    tbody tr:nth-child(even) { background: #ffffff; }
+    tbody td { padding: 1.5mm 2.5mm; border-bottom: 1px solid #e0e6f0; vertical-align: top; }
+
+    .tag { display: inline-block; padding: 0.3mm 2mm; border-radius: 3px; font-size: 7.5pt; font-weight: 700; }
+    .tag-green { background: #c8e6c9; color: #1b5e20; }
+    .tag-blue  { background: #bbdefb; color: #0d47a1; }
+    .tag-amber { background: #fff3e0; color: #e65100; }
+    .tag-red   { background: #ffcdd2; color: #b71c1c; }
+    .tag-grey  { background: #eceff1; color: #37474f; }
+
+    /* Code */
+    pre, code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 8pt; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 3mm 4mm; border-radius: 4px; margin: 2mm 0; line-height: 1.5; white-space: pre-wrap; }
+    code { background: #e8edf5; color: #1565c0; padding: 0.3mm 1.5mm; border-radius: 2px; }
+
+    /* TOC */
+    .toc { list-style: none; padding: 0; }
+    .toc li { display: flex; align-items: baseline; padding: 1.5mm 0; border-bottom: 1px dotted #d0dae8; font-size: 9.5pt; }
+    .toc-num { color: #1565c0; font-weight: 700; min-width: 10mm; }
+
+    /* Status grid */
+    .status-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3mm; margin: 4mm 0; }
+    .status-card { border-radius: 5px; padding: 2.5mm 3mm; text-align: center; }
+    .status-card.green { background: #e8f5e9; border: 1px solid #a5d6a7; }
+    .status-card.blue  { background: #e3f2fd; border: 1px solid #90caf9; }
+    .status-card.amber { background: #fff8e1; border: 1px solid #ffe082; }
+    .status-card .icon  { font-size: 13pt; display: block; margin-bottom: 1mm; }
+    .status-card .label { font-size: 7pt; font-weight: 700; color: #37474f; text-transform: uppercase; }
+    .status-card .value { font-size: 9pt; font-weight: 800; color: #1a1a2e; }
+
+    /* IR phases */
+    .ir-phase { border-left: 3px solid #1565c0; padding: 2mm 4mm; margin: 2mm 0; background: #f5f8ff; border-radius: 0 4px 4px 0; }
+    .ir-phase strong { color: #1565c0; }
+
+    .footer { margin-top: 8mm; padding-top: 2mm; border-top: 1px solid #d0dae8; font-size: 7.5pt; color: #90a4ae; display: flex; justify-content: space-between; }
+    .mt-sm { margin-top: 2mm; }
+    .mt-md { margin-top: 4mm; }
+    .text-muted { color: #546e7a; font-size: 8.5pt; }
+  </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-logo">Aurora AI Security GmbH</div>
+  <div class="cover-title">Segment 3<br>Security & SOC Plan</div>
+  <div class="cover-subtitle">Threat Modeling · Firewall Design · Monitoring · Incident Response</div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <strong>Student:</strong> Bernd Janzen<br>
+    <strong>Programme:</strong> Masterschool Cybersecurity Bootcamp<br>
+    <strong>Date:</strong> April 2026<br>
+    <strong>Framework:</strong> NIST CSF 2.0<br>
+    <strong>Scope:</strong> Freiburg HQ + Basel Branch — Full Production Network
+  </div>
+  <div class="cover-badge">Confidential — Academic Submission</div>
+</div>
+
+<!-- MAIN -->
+<div class="page">
+
+<!-- TOC -->
+<div class="page-break"></div>
+<h1>Table of Contents</h1>
+<ul class="toc">
+  <li><span class="toc-num">1.</span> Threat Model &amp; Risk Matrix (STRIDE)</li>
+  <li><span class="toc-num">2.</span> Security Framework Justification — NIST CSF 2.0</li>
+  <li><span class="toc-num">3.</span> Firewall Rules &amp; ACL Design</li>
+  <li><span class="toc-num">4.</span> Device Hardening Plan</li>
+  <li><span class="toc-num">5.</span> Logging &amp; Monitoring Plan</li>
+  <li><span class="toc-num">6.</span> SOC Roles &amp; Workflow</li>
+  <li><span class="toc-num">7.</span> Incident Response Playbook</li>
+  <li><span class="toc-num">8.</span> Implementation Roadmap</li>
+</ul>
+
+<div class="status-grid mt-md">
+  <div class="status-card green"><span class="icon">⚠️</span><div class="label">Threats Modeled</div><div class="value">5 STRIDE</div></div>
+  <div class="status-card blue"><span class="icon">🔒</span><div class="label">VLANs Secured</div><div class="value">11 Zones</div></div>
+  <div class="status-card green"><span class="icon">📡</span><div class="label">Log Sources</div><div class="value">14 Types</div></div>
+  <div class="status-card amber"><span class="icon">🛡️</span><div class="label">IR Playbooks</div><div class="value">5 Defined</div></div>
+</div>
+
+
+<!-- SECTION 1 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">1</span> Threat Model &amp; Risk Matrix</div>
+
+<p>Threats are assessed against the full Aurora production network using the <strong>STRIDE</strong> methodology. Risk Score = Likelihood × Impact (each 1–5).</p>
+
+<h2>STRIDE Categories</h2>
+<table>
+  <thead><tr><th>Letter</th><th>Threat Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><strong>S</strong></td><td>Spoofing</td><td>Impersonating a legitimate user, device, or service</td></tr>
+    <tr><td><strong>T</strong></td><td>Tampering</td><td>Modifying data, code, or configurations without authorization</td></tr>
+    <tr><td><strong>R</strong></td><td>Repudiation</td><td>Denying an action due to lack of audit trail</td></tr>
+    <tr><td><strong>I</strong></td><td>Information Disclosure</td><td>Reading data that should not be accessible</td></tr>
+    <tr><td><strong>D</strong></td><td>Denial of Service</td><td>Making a system or service unavailable</td></tr>
+    <tr><td><strong>E</strong></td><td>Elevation of Privilege</td><td>Gaining more access rights than authorized</td></tr>
+  </tbody>
+</table>
+
+<h2>Risk Matrix</h2>
+<table>
+  <thead><tr><th>#</th><th>Threat</th><th>STRIDE</th><th>Target</th><th>Likelihood</th><th>Impact</th><th>Score</th><th>Level</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Social Engineering / Phishing / Whaling</td><td>I, E</td><td>VLAN 40 / VLAN 20</td><td>3</td><td>4</td><td><strong>12</strong></td><td><span class="tag tag-red">🔴 High</span></td></tr>
+    <tr><td>2</td><td>Dirty Lab Sandbox Escape</td><td>I, T, E</td><td>VLAN 51</td><td>2</td><td>4</td><td><strong>8</strong></td><td><span class="tag tag-amber">🟠 Med-High</span></td></tr>
+    <tr><td>3</td><td>DDoS Attack on IPsec VPN Tunnel</td><td>D</td><td>Basel–Freiburg VPN</td><td>3</td><td>4</td><td><strong>12</strong></td><td><span class="tag tag-red">🔴 High</span></td></tr>
+    <tr><td>4</td><td>Client Data Theft via DMZ Web Portal</td><td>S, I, E</td><td>VLAN 100 DMZ</td><td>2</td><td>4</td><td><strong>8</strong></td><td><span class="tag tag-amber">🟠 Med-High</span></td></tr>
+    <tr><td>5</td><td>Log Deletion After Privilege Escalation</td><td>R</td><td>VLAN 30 SIEM</td><td>2</td><td>4</td><td><strong>8</strong></td><td><span class="tag tag-amber">🟠 Med-High</span></td></tr>
+  </tbody>
+</table>
+
+<div class="info-box dark mt-sm">
+  <strong>Threat 1 &amp; 3 (Score 12 — High):</strong> Addressed first in the implementation roadmap. MFA enforcement, FortiGate HA, and ISP DDoS scrubbing are priority controls.
+</div>
+
+<h2 class="mt-md">Threat Descriptions (Summary)</h2>
+
+<div class="no-break">
+<h3>Threat 1 — Social Engineering / Phishing</h3>
+<p>Targeted phishing against consultants or executives (whaling — CEO Alex Brandt, CFO Jordan) steals credentials. Attacker accesses VLAN 40 client audit data. With victim's cross-VLAN permissions, lateral movement to VLAN 20 (HR) or VLAN 50 (AI Lab) is possible. Client confidentiality breach → GDPR violation → reputational damage for a trust-based consultancy. <strong>Mitigations:</strong> MFA on all accounts (NIS2 mandate), email filtering, least-privilege ACLs, Wazuh anomalous login alerts.</p>
+</div>
+
+<div class="no-break mt-sm">
+<h3>Threat 2 — Dirty Lab Sandbox Escape</h3>
+<p>VLAN 51 hosts active exploit tools and client AI models under test. An attacker or escaped exploit tool accesses client AI training data or tampers with red team results — Aurora delivers a falsely "clean" audit report. <strong>Mitigations:</strong> Strict egress filtering on VLAN 51, Wazuh FIM monitoring, separate Dirty Lab credentials.</p>
+</div>
+
+<div class="no-break mt-sm">
+<h3>Threat 3 — DDoS on IPsec VPN</h3>
+<p>Volumetric DDoS saturates the Basel–Freiburg IPsec tunnel (FortiGate 40F HA pair). Basel consultants lose access mid-engagement → SLA breach → revenue loss. AI-backed DDoS attacks are increasingly sophisticated. <strong>Mitigations:</strong> FortiGate HA, ISP scrubbing, LTE failover for Basel.</p>
+</div>
+
+<div class="no-break mt-sm">
+<h3>Threat 4 — Client Data Theft via DMZ Portal</h3>
+<p>Attacker exploits vulnerability or stolen credentials on VLAN 100 client portal to access confidential audit reports. Reports contain detailed client infrastructure vulnerabilities — Aurora becomes the supply chain attack vector. <strong>Mitigations:</strong> WAF, portal MFA, regular patching, penetration testing.</p>
+</div>
+
+<div class="no-break mt-sm">
+<h3>Threat 5 — Log Deletion After Privilege Escalation</h3>
+<p>Attacker with compromised admin account deletes SIEM logs to cover tracks — violating NIS2 6-month retention (Art. 23) and destroying forensic evidence. A security consultancy that cannot investigate its own breach suffers catastrophic reputational damage. <strong>Mitigations:</strong> Immutable NAS backup, Wazuh FIM on log directories, HashiCorp Vault for time-limited admin credentials.</p>
+</div>
+
+
+<!-- SECTION 2 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">2</span> Security Framework Justification — NIST CSF 2.0</div>
+
+<p>As outlined in our Segment 1 network design, Aurora AI Security GmbH selected <strong>NIST CSF 2.0</strong> over ISO 27001 and MITRE ATT&amp;CK as the foundational security framework. As a startup-stage consultancy, CSF provides the right balance of structure and flexibility, with ISO 27001 certification as a 3–5 year goal.</p>
+
+<h2>Why CSF over ISO 27001</h2>
+<p>NIST CSF 2.0 provides Aurora with a flexible framework for internal risk management. The cost and operational overhead of ISO 27001 certification is not yet justified at our current stage. CSF gives structural guidance to build a mature security program first. Critically, CSF is framework-agnostic and maps directly to ISO 27001 controls — implementing CSF now does not block certification later.</p>
+
+<h2>Why CSF over MITRE ATT&amp;CK Alone</h2>
+<p>MITRE ATT&amp;CK focuses exclusively on adversary tactics and techniques at a technical level — valuable for SOC detection but it does not address governance, compliance, or business risk management. NIST CSF covers the full lifecycle from governance through recovery. MITRE ATT&amp;CK is used as a <strong>complementary tool</strong> within the Detect and Respond functions of CSF.</p>
+
+<h2>Regulatory Compliance Mapping</h2>
+<table>
+  <thead><tr><th>Regulation</th><th>Requirement</th><th>NIST CSF Function</th><th>Implementation</th></tr></thead>
+  <tbody>
+    <tr><td><strong>GDPR</strong></td><td>Data inventory (Art. 30), DPIA (Art. 35), breach notification (Art. 33)</td><td>Identify, Protect, Respond</td><td>VLAN 20 isolation, AES-256 encryption, 72h IR playbook</td></tr>
+    <tr><td><strong>NIS2</strong></td><td>Incident reporting 24h/72h (Art. 23), supply chain risk (Art. 21.2d)</td><td>Detect, Respond</td><td>Wazuh alerting, SOC SLAs, automated compliance reporting</td></tr>
+    <tr><td><strong>IT-SiG 2.0</strong></td><td>Detection systems (§8a BSIG), "state of the art" security</td><td>Detect</td><td>Wazuh SIEM, device hardening, syslog forwarding</td></tr>
+    <tr><td><strong>FADP (Swiss)</strong></td><td>Cross-border data protection</td><td>Protect</td><td>AES-256 IPsec tunnel Freiburg–Basel</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box green mt-sm">
+  NIST CSF acts as the backbone framework, allowing Aurora to demonstrate compliance across all four regulatory regimes with a single, coherent security program.
+</div>
+
+
+<!-- SECTION 3 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">3</span> Firewall Rules &amp; ACL Design</div>
+
+<p>All rules follow <strong>default-deny</strong> policy — traffic is blocked unless explicitly permitted. Rules are applied per interface (inbound). Stateful firewall handles return traffic automatically.</p>
+
+<h2>Zone Trust Levels</h2>
+<table>
+  <thead><tr><th>VLAN</th><th>Name</th><th>Trust Level</th><th>Key Constraint</th></tr></thead>
+  <tbody>
+    <tr><td>10</td><td>Management</td><td>Highest</td><td>IT admins only — Jump Server mandatory for all admin access</td></tr>
+    <tr><td>20</td><td>HR &amp; Finance</td><td>High</td><td>GDPR-protected PII — no direct access from other VLANs</td></tr>
+    <tr><td>30</td><td>IT &amp; Infrastructure</td><td>High</td><td>SIEM receives from all zones — dashboard restricted to VLAN 10</td></tr>
+    <tr><td>40</td><td>Consulting</td><td>Medium</td><td>Internet access, no HR/Dirty Lab/Management access</td></tr>
+    <tr><td>50</td><td>AI Research Lab</td><td>Medium-High</td><td>No internet — AI models must not phone home</td></tr>
+    <tr><td>51</td><td>Dirty Lab Sandbox</td><td>Maximum Restriction</td><td>Only Wazuh agent outbound — all else denied</td></tr>
+    <tr><td>60/70/80</td><td>Printers / IoT / VoIP</td><td>Low</td><td>Single-purpose — no data access, no outbound beyond function</td></tr>
+    <tr><td>100</td><td>DMZ</td><td>External-facing</td><td>HTTPS only — cannot reach VLAN 20/50/51</td></tr>
+    <tr><td>999</td><td>Guest WiFi</td><td>Untrusted</td><td>Internet only — zero internal access</td></tr>
+  </tbody>
+</table>
+
+<h2>Key ACL Rules — Critical VLANs</h2>
+
+<h3>VLAN 51 — Dirty Lab (Most Restrictive)</h3>
+<table>
+  <thead><tr><th>Action</th><th>Source</th><th>Destination</th><th>Port</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN51</td><td>VLAN30 (Wazuh)</td><td>1514/1515</td><td>Wazuh agent — only permitted outbound</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN10 (Jump)</td><td>VLAN51</td><td>22</td><td>IT admin via Jump Server only</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN50</td><td>VLAN51</td><td>22/443</td><td>AI researcher model transfer</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN51</td><td>VLAN100</td><td>*</td><td>No internet — prevents exploit tools calling home</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN51</td><td>Any</td><td>*</td><td>Default deny all other outbound</td></tr>
+  </tbody>
+</table>
+
+<h3>VLAN 20 — HR &amp; Finance</h3>
+<table>
+  <thead><tr><th>Action</th><th>Source</th><th>Destination</th><th>Port</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN20</td><td>VLAN30 (Wazuh)</td><td>1514/1515</td><td>Wazuh agent</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN20</td><td>VLAN60</td><td>9100</td><td>Printing</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN20</td><td>VLAN100</td><td>443</td><td>Internet access</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN10 (Jump)</td><td>VLAN20</td><td>22/443</td><td>IT admin via Jump Server only</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>Any</td><td>VLAN20</td><td>*</td><td>Default deny — no direct access from other VLANs</td></tr>
+  </tbody>
+</table>
+
+<h3>VLAN 40 — Consulting</h3>
+<table>
+  <thead><tr><th>Action</th><th>Source</th><th>Destination</th><th>Port</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN40</td><td>VLAN30 (Wazuh)</td><td>1514/1515</td><td>Wazuh agent</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN40</td><td>VLAN60</td><td>9100</td><td>Printing</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN40</td><td>VLAN80</td><td>5060/5061</td><td>VoIP (SIP)</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>VLAN40</td><td>VLAN100</td><td>443/80</td><td>Internet via DMZ</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN40</td><td>VLAN20</td><td>*</td><td>No HR data access</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN40</td><td>VLAN51</td><td>*</td><td>No Dirty Lab access — critical isolation</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>Any</td><td>VLAN40</td><td>*</td><td>Default deny all other inbound</td></tr>
+  </tbody>
+</table>
+
+<h3>Lab Implementation — pfSense (Segment 2 → Segment 4)</h3>
+<div class="info-box amber">
+  Current lab uses allow-all rules. These will be replaced in Segment 4 with the zone-policy rules below:
+</div>
+<table>
+  <thead><tr><th>Action</th><th>Source</th><th>Destination</th><th>Port</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>172.16.40.100 (Win11)</td><td>172.16.30.10 (Wazuh)</td><td>1514/1515</td><td>Wazuh agent</td></tr>
+    <tr><td><span class="tag tag-green">PASS</span></td><td>172.16.30.1 (pfSense)</td><td>172.16.30.10 (Wazuh)</td><td>514 UDP</td><td>Syslog forwarding</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN40 net</td><td>VLAN30 net</td><td>*</td><td>Block all other cross-VLAN traffic</td></tr>
+    <tr><td><span class="tag tag-red">DENY</span></td><td>VLAN30 net</td><td>VLAN40 net</td><td>*</td><td>Block all other cross-VLAN traffic</td></tr>
+  </tbody>
+</table>
+
+
+<!-- SECTION 4 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">4</span> Device Hardening Plan</div>
+
+<p>Device hardening reduces the attack surface by disabling unused services, enforcing strong authentication, and restricting management access. Two layers are documented: <strong>lab simulation</strong> (pfSense, Alpine, Wazuh, Win11) and <strong>production</strong> (Cisco Catalyst, FortiGate).</p>
+
+<h2>pfSense Firewall (Lab)</h2>
+<table>
+  <thead><tr><th>#</th><th>Control</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>HTTPS only — disable HTTP management</td><td>HTTP sends credentials in plain text — easily intercepted via Wireshark</td></tr>
+    <tr><td>2</td><td>Change default admin credentials</td><td>Default credentials are publicly known — first thing attackers try</td></tr>
+    <tr><td>3</td><td>SSH key-based authentication only</td><td>SSH keys cannot be phished or brute-forced like passwords</td></tr>
+    <tr><td>4</td><td>Restrict web UI to VLAN 10 (Management) only</td><td>Consultants on VLAN 40 should never reach the firewall UI</td></tr>
+    <tr><td>5</td><td>Disable UPnP</td><td>UPnP allows devices to automatically open firewall ports — dangerous</td></tr>
+    <tr><td>6</td><td>Enable login banner</td><td>Legal warning before unauthorized access</td></tr>
+    <tr><td>7</td><td>Configure NTP sync</td><td>Accurate timestamps critical for SIEM log correlation</td></tr>
+    <tr><td>8</td><td>Enable firewall logging — all categories</td><td>All traffic decisions must be logged for audit trail</td></tr>
+  </tbody>
+</table>
+
+<h2>Wazuh SIEM Server — Ubuntu 22.04</h2>
+<table>
+  <thead><tr><th>#</th><th>Control</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Disable root SSH login (<code>PermitRootLogin no</code>)</td><td>Root SSH is always targeted — require sudo escalation</td></tr>
+    <tr><td>2</td><td>SSH key-based authentication only</td><td>Eliminates brute-force risk on SIEM server</td></tr>
+    <tr><td>3</td><td>Enable UFW — allow only 22, 443, 1514, 1515, 514</td><td>UFW was disabled in lab — production must have explicit allow rules</td></tr>
+    <tr><td>4</td><td>Restrict dashboard (443) to VLAN 30 only</td><td>Dashboard should not be reachable from Consulting VLAN</td></tr>
+    <tr><td>5</td><td>Enable Wazuh FIM on <code>/var/ossec/logs/</code></td><td>Detects Threat 5 — log deletion/tampering after privilege escalation</td></tr>
+    <tr><td>6</td><td>Enable automatic security updates</td><td>SIEM server must stay patched — holds all audit evidence</td></tr>
+  </tbody>
+</table>
+
+<h2>Cisco Catalyst 9300L / 9200L (Production)</h2>
+<table>
+  <thead><tr><th>#</th><th>Control</th><th>Cisco IOS Command</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Shutdown unused physical ports</td><td><code>interface GigX/Y → shutdown</code></td></tr>
+    <tr><td>2</td><td>Enable SSH, disable Telnet</td><td><code>line vty 0 4 → transport input ssh</code></td></tr>
+    <tr><td>3</td><td>Encrypt stored passwords</td><td><code>service password-encryption</code></td></tr>
+    <tr><td>4</td><td>Disable CDP on external ports</td><td><code>no cdp run</code> — prevents device model/version reconnaissance</td></tr>
+    <tr><td>5</td><td>Restrict VTY access to VLAN 10</td><td><code>access-class &lt;ACL&gt; in</code> on <code>line vty 0 4</code></td></tr>
+    <tr><td>6</td><td>Enable DHCP Snooping on VLAN 40</td><td><code>ip dhcp snooping vlan 40</code> — prevents rogue DHCP server attack</td></tr>
+    <tr><td>7</td><td>Enable logging to SIEM</td><td><code>logging host 10.10.30.x</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Windows 11 Endpoint</h2>
+<table>
+  <thead><tr><th>#</th><th>Control</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Enable BitLocker full disk encryption</td><td>GDPR requirement — protects PII if device lost/stolen</td></tr>
+    <tr><td>2</td><td>Disable SMBv1</td><td>SMBv1 exploited by WannaCry — no modern use case</td></tr>
+    <tr><td>3</td><td>Enable audit logging (Group Policy)</td><td>Windows events feed Wazuh agent for SIEM monitoring</td></tr>
+    <tr><td>4</td><td>Enforce screen lock — 5 minutes</td><td>Physical access protection in office environment</td></tr>
+    <tr><td>5</td><td>Wazuh agent → correct server IP (172.16.30.10)</td><td>Fixed in Segment 2 — was pointing to old IP 172.16.1.10</td></tr>
+  </tbody>
+</table>
+
+
+<!-- SECTION 5 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">5</span> Logging &amp; Monitoring Plan</div>
+
+<h2>Log Sources</h2>
+<table>
+  <thead><tr><th>Category</th><th>Device / Source</th><th>Log Type</th><th>Method</th></tr></thead>
+  <tbody>
+    <tr><td>Network</td><td>Cisco Catalyst switches</td><td>Interface events, port security violations</td><td>Syslog UDP 514</td></tr>
+    <tr><td>Network</td><td>FortiGate NGFW (HQ + Basel)</td><td>Firewall allow/deny, IPS alerts, VPN events</td><td>Syslog UDP 514</td></tr>
+    <tr><td>Network</td><td>Wireless Controller</td><td>Client associations, rogue AP detection</td><td>Syslog UDP 514</td></tr>
+    <tr><td>Security</td><td>FortiGate IPS/IDS</td><td>Exploit attempts, signature matches</td><td>Built-in FortiGate logging</td></tr>
+    <tr><td>Security</td><td>WAF (DMZ VLAN 100)</td><td>SQL injection, XSS, brute force on portal</td><td>Syslog</td></tr>
+    <tr><td>Servers</td><td>ZTNA / Jump Server, HR DB, NTP, VPN GW</td><td>Admin logins, access attempts, time sync</td><td>Wazuh agent / Syslog</td></tr>
+    <tr><td>Endpoints</td><td>All Windows workstations (VLAN 40)</td><td>Logon/logoff, process creation, file changes</td><td>Wazuh agent TCP 1514</td></tr>
+    <tr><td>OT/IoT</td><td>HVAC sensors (VLAN 71), IoT (VLAN 70)</td><td>Status changes, anomalous readings</td><td>Syslog</td></tr>
+    <tr><td>Lab ✅</td><td>pfSense_Aurora</td><td>Firewall events, DHCP, auth</td><td>Syslog UDP 514 → Wazuh</td></tr>
+    <tr><td>Lab ✅</td><td>Win11-Target Wazuh Agent</td><td>Logon events, process activity, FIM</td><td>Wazuh agent TCP 1514</td></tr>
+  </tbody>
+</table>
+
+<h2>Retention Policy</h2>
+<table>
+  <thead><tr><th>Requirement</th><th>Min. Retention</th><th>Storage</th></tr></thead>
+  <tbody>
+    <tr><td>NIS2 Art. 23</td><td>6 months</td><td>Immutable NAS (VLAN 30) — write-once, cannot be deleted</td></tr>
+    <tr><td>IT-SiG 2.0 §8a</td><td>6 months</td><td>Immutable NAS (VLAN 30)</td></tr>
+    <tr><td>GDPR Art. 32</td><td>As long as necessary</td><td>Encrypted NAS — PII purged when no longer needed</td></tr>
+    <tr><td>Internal SOC</td><td>12 months (recommended)</td><td>SIEM active index — enables retrospective threat hunting</td></tr>
+  </tbody>
+</table>
+
+<h2>Key Alerting Rules</h2>
+<table>
+  <thead><tr><th>Alert</th><th>Trigger</th><th>Severity</th><th>Threat</th></tr></thead>
+  <tbody>
+    <tr><td>Multiple failed logins</td><td>≥5 failures in 60s</td><td><span class="tag tag-red">High</span></td><td>Threat 1 — Phishing</td></tr>
+    <tr><td>SIEM service stopped</td><td>wazuh-manager stops unexpectedly</td><td><span class="tag tag-red">Critical</span></td><td>Threat 5 — Log deletion</td></tr>
+    <tr><td>Log file modified</td><td>FIM change in <code>/var/ossec/logs/</code></td><td><span class="tag tag-red">Critical</span></td><td>Threat 5 — Tampering</td></tr>
+    <tr><td>VLAN 51 outbound</td><td>Any VLAN51 traffic not in approved list</td><td><span class="tag tag-red">Critical</span></td><td>Threat 2 — Sandbox escape</td></tr>
+    <tr><td>Portal auth failures</td><td>≥10 failures in 5 min on client portal</td><td><span class="tag tag-red">High</span></td><td>Threat 4 — Data theft</td></tr>
+    <tr><td>IPsec tunnel down</td><td>FortiGate reports tunnel failure</td><td><span class="tag tag-red">High</span></td><td>Threat 3 — DDoS</td></tr>
+    <tr><td>Off-hours admin login</td><td>Admin login outside 07:00–20:00 CET</td><td><span class="tag tag-amber">Medium</span></td><td>Insider threat</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box dark mt-sm">
+  <strong>Automation:</strong> Wazuh + Eramba GRC (planned) will provide automated NIS2/GDPR deadline tracking and compliance report generation, reducing risk of missed 24h/72h reporting windows.
+</div>
+
+
+<!-- SECTION 6 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">6</span> SOC Roles &amp; Workflow</div>
+
+<h2>SOC Structure</h2>
+<table>
+  <thead><tr><th>Tier</th><th>Role</th><th>Person</th><th>Responsibilities</th></tr></thead>
+  <tbody>
+    <tr><td><strong>SOC Manager</strong></td><td>Compliance &amp; Governance Lead</td><td>Morgan (Compliance Officer)</td><td>SOC oversight, NIS2 regulatory reporting, audit trail management, escalation decisions</td></tr>
+    <tr><td><strong>Tier 1/2</strong></td><td>Security Analyst (×2 min.)</td><td>Dedicated hire</td><td>Alert triage, initial investigation, incident containment, Wazuh monitoring, false positive management</td></tr>
+    <tr><td><strong>Tier 3</strong></td><td>Senior Security Engineer</td><td>IT Lead / Senior hire</td><td>Proactive threat hunting, detection rule development, malware analysis, Dirty Lab oversight, SIEM tuning</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box amber mt-sm">
+  <strong>Coverage:</strong> Minimum 2 analysts required for continuous coverage. On-call rotation covers after-hours. Critical alerts trigger automated SMS/email via Wazuh to on-call analyst and SOC Manager regardless of shift.
+</div>
+
+<h2>Alert Triage Workflow</h2>
+<pre>
+[Wazuh alert generated]
+        │
+        ├── False positive → Document → Close → Tune Wazuh rule
+        │
+        ├── Low/Medium → Tier 1/2 investigates → Remediate → Document
+        │
+        └── High/Critical → Escalate Tier 3 + SOC Manager → IR Playbook → NIS2 reporting
+</pre>
+
+<h2>Internal SLA — Response Times</h2>
+<table>
+  <thead><tr><th>Severity</th><th>Wazuh Level</th><th>SLA</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-red">Critical</span></td><td>Level 15+</td><td><strong>15 minutes</strong></td><td>Immediate escalation to Tier 3 + SOC Manager. Potential NIS2 reporting.</td></tr>
+    <tr><td><span class="tag tag-amber">High</span></td><td>Level 12–14</td><td><strong>1 hour</strong></td><td>Tier 1/2 investigates. Escalate if not resolved within SLA.</td></tr>
+    <tr><td><span class="tag tag-blue">Medium</span></td><td>Level 7–11</td><td><strong>4 hours</strong></td><td>Tier 1/2 investigates during shift. Document findings.</td></tr>
+    <tr><td><span class="tag tag-grey">Low</span></td><td>Level 0–6</td><td><strong>24 hours</strong></td><td>Review next shift. Tune if recurring false positive.</td></tr>
+  </tbody>
+</table>
+
+<h2>NIS2 Regulatory Reporting</h2>
+<table>
+  <thead><tr><th>Obligation</th><th>Deadline</th><th>Responsible</th></tr></thead>
+  <tbody>
+    <tr><td>NIS2 Early Warning (Art. 23)</td><td><strong>24 hours</strong> from awareness</td><td>SOC Manager (Morgan) → BSI MELDESTELLE</td></tr>
+    <tr><td>NIS2 Full Notification (Art. 23)</td><td><strong>72 hours</strong> from awareness</td><td>SOC Manager → Detailed impact report</td></tr>
+    <tr><td>GDPR Breach Notification (Art. 33)</td><td><strong>72 hours</strong> from awareness</td><td>DPO → Supervisory authority</td></tr>
+    <tr><td>Internal Post-Incident Report</td><td><strong>5 business days</strong></td><td>Tier 3 + SOC Manager</td></tr>
+  </tbody>
+</table>
+
+
+<!-- SECTION 7 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">7</span> Incident Response Playbook</div>
+
+<h2>7.1 Standard IR Phases</h2>
+<table>
+  <thead><tr><th>Phase</th><th>Description</th><th>Responsible</th></tr></thead>
+  <tbody>
+    <tr><td><strong>1. Detection</strong></td><td>Wazuh alert — analyst confirms real incident vs. false positive</td><td>Tier 1/2</td></tr>
+    <tr><td><strong>2. Containment</strong></td><td>Stop the spread — isolate system, revoke compromised sessions/credentials</td><td>Tier 1/2 + Tier 3</td></tr>
+    <tr><td><strong>3. Eradication</strong></td><td>Remove threat — assess blast radius, close attack vector</td><td>Tier 3</td></tr>
+    <tr><td><strong>4. Recovery</strong></td><td>Restore normal operations — verify clean state, return user to network</td><td>Tier 1/2 + Tier 3</td></tr>
+    <tr><td><strong>5. Lessons Learned</strong></td><td>Post-incident report (5 days) — root cause, NIS2 obligations, rule updates</td><td>SOC Manager + Tier 3</td></tr>
+  </tbody>
+</table>
+<div class="info-box amber mt-sm"><strong>Evidence Preservation:</strong> Before any containment action, snapshot logs and system state. Modifying a system before preserving evidence destroys forensic value and may violate NIS2 reporting requirements.</div>
+
+<h2>7.2 Playbook Summary — All 5 Threats</h2>
+
+<div class="no-break mt-md">
+<h3>Playbook 1 — Phishing / Social Engineering</h3>
+<div class="ir-phase"><strong>Detection:</strong> Wazuh auth alert — multiple failed logins or anomalous login location/time.</div>
+<div class="ir-phase"><strong>Containment:</strong> Revoke active sessions, disable account, isolate workstation to quarantine VLAN, block source IP at FortiGate.</div>
+<div class="ir-phase"><strong>Eradication:</strong> Reset credentials + MFA token. Assess blast radius — what did attacker access? Scan for keyloggers/malware.</div>
+<div class="ir-phase"><strong>Recovery:</strong> Re-image if malware found. Restore access with new credentials. Monitor account 2 weeks post-incident.</div>
+<div class="ir-phase"><strong>Lessons Learned:</strong> Assess GDPR/NIS2 obligation. Update Wazuh detection rules. Schedule phishing awareness training.</div>
+</div>
+
+<div class="no-break mt-md">
+<h3>Playbook 2 — Dirty Lab Sandbox Escape</h3>
+<div class="ir-phase"><strong>Detection:</strong> Wazuh alert — unexpected VLAN 51 outbound or lateral movement attempt.</div>
+<div class="ir-phase"><strong>Containment:</strong> Full VLAN 51 network shutdown at FortiGate. Preserve all logs immediately.</div>
+<div class="ir-phase"><strong>Eradication:</strong> Identify escaped tool/compromised node. Assess blast radius — client AI data exfiltrated?</div>
+<div class="ir-phase"><strong>Recovery:</strong> Restore Dirty Lab from known-good snapshot. Re-enable VLAN 51 only after full investigation.</div>
+<div class="ir-phase"><strong>Lessons Learned:</strong> Mandatory NIS2 notification if client data involved. Tighten VLAN 51 egress rules.</div>
+</div>
+
+<div class="no-break mt-md">
+<h3>Playbook 3 — DDoS on IPsec VPN</h3>
+<div class="ir-phase"><strong>Detection:</strong> FortiGate tunnel-down alert or Basel Wazuh agents disconnect simultaneously.</div>
+<div class="ir-phase"><strong>Containment:</strong> FortiGate HA failover. Contact ISP for upstream scrubbing. Activate LTE failover for Basel.</div>
+<div class="ir-phase"><strong>Eradication:</strong> External attack — depends on ISP scrubbing. Apply rate limiting on VPN gateway.</div>
+<div class="ir-phase"><strong>Recovery:</strong> Restore IPsec tunnel. Verify Basel branch connectivity. Document downtime for SLA review.</div>
+<div class="ir-phase"><strong>Lessons Learned:</strong> Calculate business impact. Review ISP DDoS protection contract.</div>
+</div>
+
+<div class="no-break mt-md">
+<h3>Playbook 4 — Client Data Theft via DMZ Portal</h3>
+<div class="ir-phase"><strong>Detection:</strong> WAF alert — auth failures or unusual data download from VLAN 100.</div>
+<div class="ir-phase"><strong>Containment:</strong> Disable compromised account, block source IP, take portal offline if active exploitation confirmed.</div>
+<div class="ir-phase"><strong>Eradication:</strong> Patch vulnerability. Assess blast radius — which client reports accessed? Reset all portal credentials.</div>
+<div class="ir-phase"><strong>Recovery:</strong> Security-test portal before bringing back online. Implement client MFA if not active.</div>
+<div class="ir-phase"><strong>Lessons Learned:</strong> GDPR Art. 33 notification if EU client PII accessed (72h). Commission portal penetration test.</div>
+</div>
+
+<div class="no-break mt-md">
+<h3>Playbook 5 — Log Deletion After Privilege Escalation</h3>
+<div class="ir-phase"><strong>Detection:</strong> Wazuh FIM alert — modification/deletion in <code>/var/ossec/logs/</code> or wazuh-manager stopped.</div>
+<div class="ir-phase"><strong>Containment:</strong> Revoke admin account, isolate Wazuh server, secure immutable NAS backup as primary evidence.</div>
+<div class="ir-phase"><strong>Eradication:</strong> Trace original breach. Use NAS backup logs to reconstruct full timeline and attacker actions.</div>
+<div class="ir-phase"><strong>Recovery:</strong> Restore deleted logs from NAS. Rebuild Wazuh if compromised. Reset all admin credentials.</div>
+<div class="ir-phase"><strong>Lessons Learned:</strong> NIS2 mandatory notification. Implement HashiCorp Vault for time-limited admin credentials.</div>
+</div>
+
+
+<!-- SECTION 8 -->
+<div class="page-break"></div>
+<div class="section-header"><span class="section-number">8</span> Implementation Roadmap</div>
+
+<table>
+  <thead><tr><th>Phase</th><th>Timeline</th><th>Control / Activity</th><th>Priority</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="3"><strong>Phase 1</strong><br>Foundation</td><td>Feb–Mar 2026</td><td>Network design — VLAN scheme, IP addressing, compliance mapping</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Hardware selection — FortiGate, Cisco Catalyst, pfSense</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Security framework — NIST CSF 2.0</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td rowspan="5"><strong>Phase 2</strong><br>Infrastructure</td><td>Mar–Apr 2026</td><td>Deploy lab — pfSense, Wazuh, Alpine, Win11, Kali (UTM)</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>VLAN segmentation — separate UTM bridges</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Wazuh SIEM — Manager + Indexer + Dashboard</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Wazuh agent — Windows 11 endpoint</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>pfSense syslog → Wazuh UDP 514</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td rowspan="6"><strong>Phase 3</strong><br>Security Plan</td><td>Apr 2026</td><td>STRIDE threat model — 5 threats, risk matrix</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Firewall ACL design — default-deny, 11 VLANs</td><td>Critical</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Device hardening — 6 device types</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>Logging &amp; monitoring plan</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>SOC roles, SLAs, NIS2 workflow</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td></td><td>IR playbooks — 5 threat-specific</td><td>High</td><td><span class="tag tag-green">✅ Done</span></td></tr>
+    <tr><td rowspan="6"><strong>Phase 4</strong><br>Implementation</td><td>Apr–May 2026</td><td>Deploy zone-policy firewall rules in pfSense</td><td>Critical</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+    <tr><td></td><td>Apply device hardening — all lab VMs</td><td>High</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+    <tr><td></td><td>Configure Wazuh alerting — map to 5 STRIDE threats</td><td>High</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+    <tr><td></td><td>Penetration testing — Kali Linux attack simulation</td><td>High</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+    <tr><td></td><td>Validate detection — Wazuh alerts during attack</td><td>High</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+    <tr><td></td><td>SOC workflow simulation — triage, contain, document</td><td>Medium</td><td><span class="tag tag-amber">🔜 Seg. 4</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Extension Controls (Post-Segment 4)</h2>
+<table>
+  <thead><tr><th>Control</th><th>Tool</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Intrusion Detection</td><td>Suricata (pfSense)</td><td>Inline IDS/IPS — detects Kali attack patterns in real time</td></tr>
+    <tr><td>Privileged Access Management</td><td>HashiCorp Vault</td><td>Time-limited admin credentials — mitigates Threat 5</td></tr>
+    <tr><td>SOC Automation</td><td>Python scripts</td><td>Alert parsing, automated response, health checks</td></tr>
+    <tr><td>GRC Management</td><td>Eramba Community</td><td>NIST CSF → ISO 27001 / SOC 2 mapping, NIS2 reporting automation</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <span>Aurora AI Security GmbH — Masterschool Cybersecurity Bootcamp</span>
+  <span>Segment 3: Security &amp; SOC Plan — Bernd Janzen — April 2026</span>
+</div>
+
+</div>
+</body>
+</html>
