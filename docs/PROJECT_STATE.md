@@ -121,8 +121,8 @@ Proper separate VLAN interfaces via UTM bridges — NOT flat network.
 - **Remaining:**
   - ✅ Firewall rules & ACL tables per VLAN zone (Section 3) — all 11 VLANs + lab rules
   - ✅ SOC roles & workflow definition (Section 6) — tiers, SLAs, NIS2 reporting, threat hunting
-  - 🔜 Incident response playbook (Section 7)
-  - 🔜 Implementation roadmap — Gantt-style table (Section 8)
+  - ✅ Incident response playbook (Section 7) — 5 threat-specific playbooks
+  - ✅ Implementation roadmap (Section 8) — 4 phases, risk-prioritized
   - 🔜 Build HTML → compile PDF: Segment3_SecuritySOCPlan_Janzen.pdf
 
 ### 📅 Segment 4: Implementation & Validation (FINAL)

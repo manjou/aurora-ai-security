@@ -695,4 +695,155 @@ Aurora AI Security operates a small internal SOC appropriate for a startup-stage
 
 ---
 
-*Sections 7, 8 to be completed.*
+---
+
+## 7. Incident Response Playbook
+
+### 7.1 IR Lifecycle — Standard Phases
+
+All incidents at Aurora follow the 5-phase IR lifecycle regardless of threat type:
+
+| Phase | Description | Responsible |
+|-------|-------------|-------------|
+| **1. Detection** | Wazuh alert triggers, analyst reviews logs to confirm real incident vs. false positive | Tier 1/2 Analyst |
+| **2. Containment** | Stop the spread — isolate affected system, revoke compromised credentials/sessions, block attack vector | Tier 1/2 + Tier 3 |
+| **3. Eradication** | Remove the threat — delete malware, close attack vector, assess blast radius (what systems/data were accessed) | Tier 3 |
+| **4. Recovery** | Restore normal operations — re-image if necessary, restore from backup, verify clean state, return user to network | Tier 1/2 + Tier 3 |
+| **5. Lessons Learned** | Post-incident report within 5 business days — root cause, timeline, blast radius, regulatory obligations, Wazuh rule updates | SOC Manager + Tier 3 |
+
+> **Evidence Preservation Rule:** Before any containment or eradication action, take a snapshot of logs and system state. Modifying a system before preserving evidence destroys forensic value and may violate NIS2 reporting requirements.
+
+---
+
+### 7.2 Playbook 1 — Social Engineering / Phishing (Threat 1)
+
+**Trigger:** Wazuh alert — multiple failed logins, anomalous login time/location, or user reports suspicious email.
+
+| Phase | Actions |
+|-------|---------|
+| **Detection** | Review Wazuh authentication logs. Confirm credential theft vs. false positive. Check login source IP and time against user's normal pattern. |
+| **Containment** | 1. Immediately revoke active sessions and force re-authentication. 2. Disable compromised account temporarily. 3. Block source IP at FortiGate (temporary — attacker may rotate IPs). 4. Isolate affected workstation from VLAN 40 — move to quarantine VLAN. 5. Notify user and SOC Manager. |
+| **Eradication** | 1. Reset credentials with strong password + new MFA token. 2. Assess blast radius — what did the attacker access with stolen credentials? Check VLAN 40 file access logs and cross-VLAN connections. 3. Scan isolated workstation for malware/keyloggers. 4. Check if attacker attempted lateral movement to VLAN 20 or VLAN 50. |
+| **Recovery** | 1. Re-image workstation if malware found. 2. Restore user access with new credentials and verified MFA. 3. Return workstation to VLAN 40. 4. Monitor account closely for 2 weeks post-incident. |
+| **Lessons Learned** | 1. Document full timeline and blast radius. 2. Assess NIS2/GDPR reporting obligation (was client/employee PII accessed?). 3. Update Wazuh rules to detect similar patterns earlier. 4. Schedule targeted phishing awareness training for affected department. |
+
+---
+
+### 7.3 Playbook 2 — Dirty Lab Sandbox Escape (Threat 2)
+
+**Trigger:** Wazuh alert — VLAN 51 outbound connection to non-approved destination, or unexpected process on VLAN 30/40 originating from VLAN 51 source.
+
+| Phase | Actions |
+|-------|---------|
+| **Detection** | Review Wazuh VLAN 51 activity logs. Confirm unexpected outbound traffic or lateral movement attempt. Check FortiGate firewall logs for VLAN 51 rule violations. |
+| **Containment** | 1. Immediately shut down all VLAN 51 network connectivity at FortiGate — full isolation. 2. Notify Tier 3 and SOC Manager immediately (Critical severity). 3. Preserve all VLAN 51 logs before any changes. 4. Identify which Dirty Lab node is involved. |
+| **Eradication** | 1. Identify the escaped exploit tool or compromised node. 2. Assess blast radius — did any VLAN 30/40 systems receive unexpected connections? 3. Check if client AI model data was exfiltrated. 4. Remove compromised node from Dirty Lab environment. |
+| **Recovery** | 1. Restore Dirty Lab from known-good snapshot. 2. Re-enable VLAN 51 connectivity only after full investigation. 3. Notify affected clients if their AI model data was involved. 4. Review and tighten VLAN 51 egress rules. |
+| **Lessons Learned** | 1. Full post-incident report — mandatory NIS2 notification if client data involved. 2. Review Dirty Lab access controls and researcher session logging. 3. Update firewall rules to prevent recurrence. 4. Consider additional network segmentation within VLAN 51. |
+
+---
+
+### 7.4 Playbook 3 — DDoS Attack on IPsec VPN Tunnel (Threat 3)
+
+**Trigger:** FortiGate alert — IPsec tunnel down, or Wazuh alert — Basel branch agents disconnected simultaneously.
+
+| Phase | Actions |
+|-------|---------|
+| **Detection** | Confirm tunnel is down via FortiGate HA pair status. Verify it is a DDoS (volumetric traffic) vs. configuration issue. Check ISP for upstream attack confirmation. |
+| **Containment** | 1. Activate FortiGate HA failover if not automatic. 2. Contact ISP — request upstream DDoS scrubbing. 3. Enable LTE failover for Basel branch (backup connectivity). 4. Notify Basel branch staff of disruption and ETA. 5. Assess SLA breach risk for active client engagements. |
+| **Eradication** | DDoS is external — eradication depends on ISP scrubbing or attack subsiding. Continue monitoring traffic volume. Rate limiting on VPN gateway to reduce impact of future attacks. |
+| **Recovery** | 1. Restore IPsec tunnel once attack subsides. 2. Verify Basel branch connectivity — confirm all agents reconnect to Wazuh. 3. Document downtime duration for SLA review. |
+| **Lessons Learned** | 1. Calculate business impact — hours of downtime × consultant billing rate. 2. Review ISP DDoS protection contract. 3. Document SLA breach if applicable — notify affected clients. 4. Consider redundant ISP connection for Basel branch. |
+
+---
+
+### 7.5 Playbook 4 — Client Data Theft via DMZ Web Portal (Threat 4)
+
+**Trigger:** Wazuh/WAF alert — multiple authentication failures on client portal, unusual data download volume, or anomalous API calls from DMZ VLAN 100.
+
+| Phase | Actions |
+|-------|---------|
+| **Detection** | Review WAF and Wazuh logs for VLAN 100. Identify source IP, targeted account, and data accessed. Determine if attacker authenticated as legitimate client (Spoofing) or exploited vulnerability. |
+| **Containment** | 1. Immediately disable compromised client portal account. 2. Block source IP at FortiGate perimeter. 3. Take portal offline if active exploitation is confirmed. 4. Preserve all portal access logs. |
+| **Eradication** | 1. Identify and patch exploited vulnerability. 2. Assess blast radius — which client reports were accessed? 3. Review all portal accounts for signs of unauthorized access. 4. Reset all portal credentials as precaution. |
+| **Recovery** | 1. Apply patch and security test portal before bringing back online. 2. Notify affected clients — mandatory if their confidential data was accessed. 3. Restore portal with enhanced WAF rules. 4. Implement client-side MFA on portal if not already active. |
+| **Lessons Learned** | 1. GDPR Art. 33 notification if EU client PII was accessed (72-hour deadline). 2. NIS2 notification if significant incident threshold met. 3. Commission penetration test of portal post-incident. 4. Review data isolation — each client must only see their own reports. |
+
+---
+
+### 7.6 Playbook 5 — Log Deletion After Privilege Escalation (Threat 5)
+
+**Trigger:** Wazuh File Integrity Monitoring (FIM) alert — modification or deletion detected in `/var/ossec/logs/`, or Wazuh service unexpectedly stopped.
+
+| Phase | Actions |
+|-------|---------|
+| **Detection** | FIM alert triggers immediately on log tampering. Review which logs were modified/deleted and from which account. Cross-reference with immutable NAS backup to identify gap. |
+| **Containment** | 1. Immediately revoke admin account that performed deletion. 2. Isolate Wazuh server from network — prevent further tampering. 3. Preserve immutable NAS backup — this is now primary evidence. 4. Notify SOC Manager — this indicates a prior breach that attacker is now covering up. |
+| **Eradication** | 1. Investigate how admin account was compromised — trace back to original breach (likely Threat 1 or Threat 4). 2. Identify full timeline using NAS backup logs. 3. Assess what actions the attacker performed that they were trying to hide. 4. Remove attacker access from all systems. |
+| **Recovery** | 1. Restore deleted logs from immutable NAS backup. 2. Rebuild Wazuh server if compromised. 3. Reset all admin credentials. 4. Re-enable monitoring and verify FIM is active. |
+| **Lessons Learned** | 1. NIS2 mandatory notification — log deletion likely means a prior significant incident occurred. 2. Update Wazuh rules — alert on any admin account accessing log directories. 3. Review privileged access controls — implement HashiCorp Vault for time-limited admin credentials. 4. Verify NAS immutability — confirm backup integrity was maintained. |
+
+---
+
+---
+
+## 8. Implementation Roadmap
+
+### Overview
+
+The roadmap sequences all security controls, monitoring setup, and SOC onboarding across 4 phases aligned with the Aurora project segments. Controls are prioritized by risk score — High risk threats (Score 12) are addressed first.
+
+---
+
+### 8.1 Roadmap Table
+
+| Phase | Timeline | Control / Activity | Priority | Status | Segment |
+|-------|----------|--------------------|----------|--------|---------|
+| **Phase 1 — Foundation** | Feb–Mar 2026 | Network design — VLAN scheme, IP addressing, compliance mapping | Critical | ✅ Complete | Seg. 1 |
+| | | Hardware selection — FortiGate, Cisco Catalyst, pfSense | Critical | ✅ Complete | Seg. 1 |
+| | | Security framework selection — NIST CSF 2.0 | Critical | ✅ Complete | Seg. 1 |
+| **Phase 2 — Infrastructure** | Mar–Apr 2026 | Deploy virtualized lab — pfSense, Wazuh, Alpine switches, Win11, Kali | Critical | ✅ Complete | Seg. 2 |
+| | | VLAN segmentation — separate UTM bridges per VLAN | Critical | ✅ Complete | Seg. 2 |
+| | | Inter-VLAN routing — pfSense LAN + VLAN40CONSULTING | Critical | ✅ Complete | Seg. 2 |
+| | | Wazuh SIEM deployment — Manager + Indexer + Dashboard | Critical | ✅ Complete | Seg. 2 |
+| | | Wazuh agent — Windows 11 endpoint | High | ✅ Complete | Seg. 2 |
+| | | pfSense syslog → Wazuh UDP 514 | High | ✅ Complete | Seg. 2 |
+| **Phase 3 — Security Controls** | Apr 2026 | STRIDE threat model & risk matrix | Critical | ✅ Complete | Seg. 3 |
+| | | Firewall ACL design — default-deny, all 11 VLANs | Critical | ✅ Complete | Seg. 3 |
+| | | Device hardening plan — pfSense, Alpine, Wazuh, Win11, Cisco, FortiGate | High | ✅ Complete | Seg. 3 |
+| | | Logging & monitoring plan — log sources, retention, alerting rules | High | ✅ Complete | Seg. 3 |
+| | | SOC roles & workflow — tiers, SLAs, NIS2 reporting | High | ✅ Complete | Seg. 3 |
+| | | Incident response playbooks — 5 threat-specific playbooks | High | ✅ Complete | Seg. 3 |
+| **Phase 4 — Implementation & Validation** | Apr–May 2026 | Deploy zone-policy firewall rules in pfSense (replace allow-all) | Critical | 🔜 Seg. 4 | Seg. 4 |
+| | | Apply device hardening — pfSense, Alpine, Wazuh, Win11 | High | 🔜 Seg. 4 | Seg. 4 |
+| | | Configure Wazuh alerting rules — map to 5 STRIDE threats | High | 🔜 Seg. 4 | Seg. 4 |
+| | | Configure Wazuh dashboards — Security Overview, Auth Monitor, VLAN 51 | Medium | 🔜 Seg. 4 | Seg. 4 |
+| | | Penetration testing — Kali Linux external attack simulation | High | 🔜 Seg. 4 | Seg. 4 |
+| | | Validate detection — confirm Wazuh generates alerts during attack | High | 🔜 Seg. 4 | Seg. 4 |
+| | | SOC workflow simulation — triage, escalate, contain, document | Medium | 🔜 Seg. 4 | Seg. 4 |
+| | | Post-implementation review & final portfolio documentation | Medium | 🔜 Seg. 4 | Seg. 4 |
+
+---
+
+### 8.2 Risk-Prioritized Control Sequence
+
+Controls are sequenced by risk score from Section 1 — highest risk threats addressed first in Phase 4:
+
+| Priority | Threat | Risk Score | Control Implemented In |
+|----------|--------|------------|----------------------|
+| 1 | Social Engineering / Phishing | 12 | MFA enforcement, VLAN 40 ACLs, Wazuh auth alerts |
+| 1 | DDoS on IPsec VPN | 12 | FortiGate HA, ISP scrubbing, LTE failover |
+| 3 | Dirty Lab Sandbox Escape | 8 | VLAN 51 strict egress rules, FIM monitoring |
+| 3 | Client Data Theft via DMZ | 8 | WAF on VLAN 100, portal MFA, patching |
+| 3 | Log Deletion / Privilege Escalation | 8 | Wazuh FIM on logs, immutable NAS, HashiCorp Vault |
+
+---
+
+### 8.3 Extension Controls (Post-Segment 4)
+
+| Control | Tool | Purpose | Timeline |
+|---------|------|---------|----------|
+| Intrusion Detection | Suricata (pfSense package) | Inline IDS/IPS — detects Kali attack patterns in real time | Post-Seg. 4 |
+| Privileged Access Management | HashiCorp Vault | Time-limited admin credentials — mitigates Threat 5 | Post-Seg. 4 |
+| SOC Automation | Python scripts | Alert parsing, automated response, health checks | Post-Seg. 4 |
+| GRC Management | Eramba Community | Maps NIST CSF controls to ISO 27001 / SOC 2 — NIS2 reporting automation | May 2026 |
